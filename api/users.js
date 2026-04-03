@@ -2,6 +2,10 @@ import { connectToDatabase } from '../lib/mongo.js'
 import { User } from '../models.js'
 import bcrypt from 'bcryptjs'
 
+function isValidMsecEmail(email = '') {
+  return /^[^\s@]+@msec\.edu\.in$/i.test(email.trim())
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
 
@@ -36,7 +40,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'name, email and password are required' })
       }
 
-      const existing = await User.findOne({ email: email.toLowerCase() })
+      if (!isValidMsecEmail(email)) {
+        return res.status(400).json({ success: false, error: 'Only @msec.edu.in email addresses are allowed' })
+      }
+
+      const normalizedEmail = email.trim().toLowerCase()
+      const existing = await User.findOne({ email: normalizedEmail })
       if (existing) {
         return res.status(409).json({ success: false, error: 'User already exists' })
       }
@@ -44,7 +53,7 @@ export default async function handler(req, res) {
       const hashed = await bcrypt.hash(password, 10)
       const user = new User({
         name,
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         password: hashed,
         role: role || 'user',
         autoApprove: !!autoApprove,

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const MSEC_EMAIL_PATTERN = /^[^\s@]+@msec\.edu\.in$/i
+
 function SignUp() {
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +33,11 @@ function SignUp() {
       setIsLoading(false)
       return
     }
+    if (!MSEC_EMAIL_PATTERN.test(formData.email.trim())) {
+      setError('Only MSEC institutional emails are allowed. Use your @msec.edu.in email address.')
+      setIsLoading(false)
+      return
+    }
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
       setIsLoading(false)
@@ -42,7 +49,12 @@ function SignUp() {
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name, email: formData.email, password: formData.password, role: 'user' })
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+          role: 'user'
+        })
       })
       const data = await response.json().catch(() => ({}))
       if (!response.ok) {
@@ -109,12 +121,13 @@ function SignUp() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-bold text-white mb-3">Full Name</label>
-                <input name="name" value={formData.name} onChange={handleInputChange} className="w-full px-4 py-4 border-0 rounded-2xl bg-[#edf4ff] border border-white/45 focus:ring-2 focus:ring-[#8ec5ff] focus:outline-none transition-all duration-200 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" placeholder="John Doe" required />
+                <input name="name" value={formData.name} onChange={handleInputChange} className="w-full px-4 py-4 border-0 rounded-2xl bg-[#edf4ff] border border-white/45 focus:ring-2 focus:ring-[#8ec5ff] focus:outline-none transition-all duration-200 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" placeholder="Enter your name" required />
               </div>
 
               <div>
                 <label className="block text-sm font-bold text-white mb-3">Email Address</label>
-                <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full px-4 py-4 border-0 rounded-2xl bg-[#edf4ff] border border-white/45 focus:ring-2 focus:ring-[#8ec5ff] focus:outline-none transition-all duration-200 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" placeholder="you@school.com" required />
+                <input type="email" name="email" value={formData.email} onChange={handleInputChange} pattern=".*@msec\.edu\.in$" title="Please use your MSEC email address (@msec.edu.in)" className="w-full px-4 py-4 border-0 rounded-2xl bg-[#edf4ff] border border-white/45 focus:ring-2 focus:ring-[#8ec5ff] focus:outline-none transition-all duration-200 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" placeholder="Enter your email" required />
+                <p className="mt-2 text-xs text-white/85">Use your official MSEC email address</p>
               </div>
 
               <div>

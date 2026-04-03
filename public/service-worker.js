@@ -1,23 +1,11 @@
-// Service Worker for Push Notifications
-const CACHE_NAME = 'msec-connect-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/images/mseclogo.png',
-  '/images/android-chrome-192x192.png'
-];
+// Service worker dedicated to push notifications only.
+// Do not cache app shell/assets here to avoid stale deploy bundles.
+const LEGACY_CACHE_PREFIX = 'msec-connect-';
 
 // Install Service Worker
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing...');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
-      })
-      .then(() => self.skipWaiting())
-  );
+  event.waitUntil(self.skipWaiting());
 });
 
 // Activate Service Worker
@@ -27,23 +15,14 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('Service Worker: Clearing old cache');
+          if (cache.startsWith(LEGACY_CACHE_PREFIX)) {
+            console.log('Service Worker: Clearing legacy cache', cache);
             return caches.delete(cache);
           }
+          return Promise.resolve();
         })
       );
     }).then(() => self.clients.claim())
-  );
-});
-
-// Fetch Event
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        return response || fetch(event.request);
-      })
   );
 });
 

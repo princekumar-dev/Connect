@@ -138,7 +138,12 @@ async function verifySubscriptionWithServer(subscription, userEmail) {
  */
 async function registerServiceWorker() {
   try {
-    return await navigator.serviceWorker.register('/service-worker.js');
+    const registration = await navigator.serviceWorker.register('/service-worker.js', {
+      scope: '/',
+      updateViaCache: 'none'
+    });
+    await registration.update();
+    return registration;
   } catch (error) {
     console.error('Service Worker registration failed:', error);
     throw error;

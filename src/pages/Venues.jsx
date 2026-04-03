@@ -3,6 +3,53 @@ import { Link, useSearchParams } from 'react-router-dom'
 import VenueCalendar from '../components/VenueCalendar'
 import CalendarExportModal from '../components/CalendarExportModal'
 
+const STATUS_STYLES = {
+  available: {
+    overlayClass: 'bg-green-500/90 text-white',
+    inlineClass: 'bg-green-100 text-green-700',
+    dotClass: 'bg-green-500',
+    icon: (
+      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+      </svg>
+    ),
+    label: 'Available'
+  },
+  occupied: {
+    overlayClass: 'bg-red-500/90 text-white',
+    inlineClass: 'bg-red-100 text-red-700',
+    dotClass: 'bg-red-500',
+    icon: (
+      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    ),
+    label: 'Occupied'
+  },
+  buffer: {
+    overlayClass: 'bg-orange-500/90 text-white',
+    inlineClass: 'bg-orange-100 text-orange-700',
+    dotClass: 'bg-orange-500',
+    icon: (
+      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3a1 1 0 00.293.707l2 2a1 1 0 101.414-1.414L11 9.586V7z" clipRule="evenodd" />
+      </svg>
+    ),
+    label: 'Buffer Time'
+  }
+}
+
+function getStatusMeta(status, statusMessage) {
+  const normalizedStatus = STATUS_STYLES[status] ? status : 'available'
+  const styles = STATUS_STYLES[normalizedStatus]
+
+  return {
+    ...styles,
+    status: normalizedStatus,
+    fullLabel: statusMessage || styles.label
+  }
+}
+
 const Venues = () => {
   const [venues, setVenues] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
@@ -54,9 +101,12 @@ const Venues = () => {
   useEffect(() => {
     let intervalId
 
-    const loadVenues = async () => {
+    const loadVenues = async ({ showLoader = false } = {}) => {
       try {
-        setLoading(true)
+        if (showLoader) {
+          setLoading(true)
+        }
+
         const response = await fetch('/api/venues')
         const data = await response.json()
         if (!response.ok || !data.success) {
@@ -73,17 +123,19 @@ const Venues = () => {
         console.error('Error loading venues:', error)
         setVenues([])
       } finally {
-        setLoading(false)
+        if (showLoader) {
+          setLoading(false)
+        }
       }
     }
 
-    loadVenues()
+    loadVenues({ showLoader: true })
 
     intervalId = window.setInterval(() => {
       if (document.visibilityState === 'visible') {
         loadVenues()
       }
-    }, 60000)
+    }, 30000)
 
     return () => {
       if (intervalId) {
@@ -244,7 +296,10 @@ const Venues = () => {
                 </div>
               </div>
             ) : (
-              filteredVenues.map((venue) => (
+              filteredVenues.map((venue) => {
+                const statusMeta = getStatusMeta(venue.status, venue.statusMessage)
+
+                return (
                 <div 
                   key={venue.venue} 
                   className="perf-card glass-card no-mobile-backdrop group hover:scale-[1.02] transition-all duration-300 overflow-hidden mobile-card tablet-card desktop-card desktop-hover mobile-smoothest-scroll mobile-venue-card"
@@ -273,30 +328,10 @@ const Venues = () => {
                     
                     {/* Status Badge */}
                     <div className="absolute top-4 right-4">
-                      {(!venue.status || venue.status === 'available') && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-500/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                          Available
-                        </span>
-                      )}
-                      {venue.status === 'occupied' && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-500/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                          </svg>
-                          Occupied
-                        </span>
-                      )}
-                      {venue.status === 'buffer' && (
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-500/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3a1 1 0 00.293.707l2 2a1 1 0 101.414-1.414L11 9.586V7z" clipRule="evenodd" />
-                          </svg>
-                          Buffer Time
-                        </span>
-                      )}
+                      <span className={`inline-flex max-w-[220px] items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-sm ${statusMeta.overlayClass}`}>
+                        {statusMeta.icon}
+                        <span className="truncate">{statusMeta.label}</span>
+                      </span>
                     </div>
                     
                     {/* Venue Title Overlay */}
@@ -317,44 +352,14 @@ const Venues = () => {
                         <span className="text-sm font-medium">{venue.capacity} people</span>
                       </div>
                       <div className="text-right">
-                        {(!venue.status || venue.status === 'available') && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            Available
-                          </span>
-                        )}
-                        {venue.status === 'occupied' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
-                            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            Occupied
-                          </span>
-                        )}
-                        {venue.status === 'buffer' && (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                            Buffer Time
-                          </span>
-                        )}
+                        <span
+                          title={statusMeta.fullLabel}
+                          className={`inline-flex max-w-[240px] items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${statusMeta.inlineClass}`}
+                        >
+                          <div className={`h-2 w-2 rounded-full ${statusMeta.dotClass}`}></div>
+                          <span className="truncate">{statusMeta.fullLabel}</span>
+                        </span>
                       </div>
-                    </div>
-
-                    <div className={`rounded-xl border px-4 py-3 ${
-                      venue.status === 'occupied'
-                        ? 'border-red-200 bg-red-50'
-                        : venue.status === 'buffer'
-                          ? 'border-orange-200 bg-orange-50'
-                          : 'border-green-200 bg-green-50'
-                    }`}>
-                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Live Status</p>
-                      <p className={`mt-1 text-sm font-semibold ${
-                        venue.status === 'occupied'
-                          ? 'text-red-700'
-                          : venue.status === 'buffer'
-                            ? 'text-orange-700'
-                            : 'text-green-700'
-                      }`}>
-                        {venue.statusMessage || 'Available for booking'}
-                      </p>
                     </div>
 
                     {/* Venue Features */}
@@ -429,7 +434,7 @@ const Venues = () => {
                     </div>
                   </div>
                 </div>
-              ))
+              )})
             )}
           </div>
         </div>

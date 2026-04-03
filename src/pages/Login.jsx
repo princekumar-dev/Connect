@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const MSEC_EMAIL_PATTERN = /^[^\s@]+@msec\.edu\.in$/i
+
 function Login() {
   const [formData, setFormData] = useState({
     email: '',
@@ -32,6 +34,12 @@ function Login() {
       return
     }
 
+    if (!MSEC_EMAIL_PATTERN.test(formData.email.trim())) {
+      setError('Only MSEC institutional emails are allowed. Use your @msec.edu.in email address.')
+      setIsLoading(false)
+      return
+    }
+
     try {
       // Send authentication request to the backend API
       const response = await fetch('/api/auth', {
@@ -39,7 +47,10 @@ function Login() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password
+        })
       })
 
       const data = await response.json()
@@ -137,8 +148,10 @@ function Login() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
+                  pattern=".*@msec\.edu\.in$"
+                  title="Please use your MSEC email address (@msec.edu.in)"
                   className="w-full px-4 py-3 sm:py-4 border-0 rounded-xl sm:rounded-2xl bg-[#edf4ff] border border-white/45 focus:ring-2 focus:ring-[#8ec5ff] focus:outline-none transition-all duration-200 text-slate-900 placeholder:text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]"
-                  placeholder="Enter your email address"
+                  placeholder="Enter your MSEC email address"
                   required
                 />
               </div>

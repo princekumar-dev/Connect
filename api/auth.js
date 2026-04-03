@@ -2,6 +2,10 @@ import { connectToDatabase } from '../lib/mongo.js'
 import { User } from '../models.js'
 import bcrypt from 'bcryptjs'
 
+function isValidMsecEmail(email = '') {
+  return /^[^\s@]+@msec\.edu\.in$/i.test(email.trim())
+}
+
 export default async function handler(req, res) {
   // CORS is already handled by the cors middleware in server.js
   
@@ -32,13 +36,20 @@ export default async function handler(req, res) {
         })
       }
 
+      if (!isValidMsecEmail(email)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Only @msec.edu.in email addresses are allowed'
+        })
+      }
+
       // Find user in database
-      const user = await User.findOne({ email: email.toLowerCase() })
+      const user = await User.findOne({ email: email.trim().toLowerCase() })
       
       if (!user) {
         return res.status(401).json({
           success: false,
-          error: 'Invalid email or password'
+          error: 'User not found'
         })
       }
 
@@ -47,7 +58,7 @@ export default async function handler(req, res) {
       if (!passwordMatches) {
         return res.status(401).json({
           success: false,
-          error: 'Invalid email or password'
+          error: 'Invalid password'
         })
       }
 

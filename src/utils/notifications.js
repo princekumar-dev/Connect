@@ -147,11 +147,15 @@ class PushNotificationManager {
 
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/'
+        scope: '/',
+        updateViaCache: 'none'
       });
       
       console.log('Service Worker registered:', registration);
       this.registration = registration;
+
+      // Trigger an immediate update check so deploys do not stick to stale SW code.
+      await registration.update();
 
       // Wait for service worker to be ready
       await navigator.serviceWorker.ready;
