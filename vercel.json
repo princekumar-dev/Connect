@@ -1,0 +1,55 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+    ,
+    {
+      "source": "/assets/(.*).woff2",
+      "headers": [
+        { "key": "Content-Type", "value": "font/woff2" }
+      ]
+    },
+    {
+      "source": "/assets/(.*).woff",
+      "headers": [
+        { "key": "Content-Type", "value": "font/woff" }
+      ]
+    },
+    {
+      "source": "/assets/(.*).ttf",
+      "headers": [
+        { "key": "Content-Type", "value": "font/ttf" }
+      ]
+    }
+  ]
+}

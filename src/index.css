@@ -1,0 +1,1234 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --layout-max-width: 1280px;
+  --layout-gutter: clamp(1rem, 2vw, 2.5rem);
+  --layout-stack-gap: clamp(1rem, 2vw, 2rem);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --layout-gutter: 0.875rem;
+    --layout-stack-gap: 0.875rem;
+  }
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.layout-container {
+  width: 100%;
+  padding-inline: var(--layout-gutter);
+  margin: 0 auto;
+  max-width: var(--layout-max-width);
+  box-sizing: border-box;
+}
+
+.layout-content-container {
+  width: 100%;
+  flex: 1;
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding-inline: clamp(1rem, 2vw, 2.5rem);
+  padding-bottom: clamp(1.5rem, 2vw, 3rem);
+  box-sizing: border-box;
+  }
+
+  @media (max-width: 640px) {
+    .layout-container,
+    .layout-content-container {
+      padding-inline: 0.875rem;
+    }
+  }
+
+.layout-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ========================================
+   GLOBAL SMOOTH SCROLLING & PERFORMANCE
+   ======================================== */
+
+/* Smooth scrolling for all devices */
+html {
+  scroll-behavior: auto !important;
+  -webkit-overflow-scrolling: touch;
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+/* Reduce animations for users who prefer reduced motion or slow devices */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Performance optimizations for all devices */
+* {
+  /* Prevent layout shifts */
+  box-sizing: border-box;
+  /* Improve text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ultra-smooth mobile scroll for booking form */
+@media (max-width: 640px) {
+  .mobile-smoothest-scroll {
+    /* Avoid forcing GPU compositing on parent containers which can cause jank */
+    -webkit-transform: none;
+    transform: none;
+    -webkit-backface-visibility: visible;
+    backface-visibility: visible;
+    -webkit-perspective: none;
+    perspective: none;
+    will-change: auto;
+  }
+}
+
+/* Nudge certain absolute dropdowns slightly right on desktop to align visually with header avatar */
+@media (min-width: 1024px) {
+  .desktop-offset {
+    /* move right by 8px; use translateX for smooth GPU-accelerated rendering */
+    transform: translateX(8px);
+    -webkit-transform: translateX(8px);
+  }
+}
+
+/* Mobile centered modal adjustments */
+@media (max-width: 1023px) {
+  /* make sure modal inner panel is vertically centered and not glued to top */
+  .no-mobile-backdrop > .bg-white {
+    margin: 0 auto;
+    max-height: 90vh;
+    border-radius: 14px;
+  }
+}
+
+/* Full-width mobile settings panel that sits below the header */
+@media (max-width: 768px) {
+  .mobile-fullwidth-settings {
+    position: fixed;
+    left: 0;
+    right: 0;
+    width: 100%;
+    /* default top will be set inline from JS to match header height + small gap */
+    background: transparent; /* wrapper is transparent; inner panel handles visual */
+    z-index: 60;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 0;
+  }
+
+  .mobile-fullwidth-settings .inner-panel {
+    width: 100%;
+    border-radius: 0.5rem;
+    max-height: calc(100vh - var(--header-offset, 56px) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    box-shadow: 0 -6px 30px rgba(2,6,23,0.08);
+    background: #ffffff;
+    border-top-left-radius: 0.75rem;
+    border-top-right-radius: 0.75rem;
+  }
+}
+/* Mobile smooth scroll for booking form */
+@media (max-width: 640px) {
+  .mobile-smooth-scroll {
+    scroll-behavior: smooth;
+  }
+}
+html {
+  scroll-behavior: auto !important;
+  -webkit-overflow-scrolling: touch;
+  height: auto !important;
+  min-height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  height: auto !important;
+  min-height: 100% !important;
+  scroll-behavior: auto !important;
+}
+
+/* Also apply to :host for Shadow DOM contexts and ensure unprefixed variant is present */
+:host, html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Improve print color handling in WebKit based browsers */
+img, svg {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Ensure form controls print colors correctly in WebKit/Chromium browsers */
+select, option {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* Ensure consistent user-select behavior where used */
+* {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.wave-text {
+  background: linear-gradient(90deg, #3d99f5, #c0c0c0, #3d99f5, #c0c0c0);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: wave-animation 3s ease-in-out infinite;
+  /* Only transition transform (scale on hover) — NOT all properties.
+     'transition: all' was catching animation-duration and making
+     the speed change feel sluggish on desktop. */
+  transition: transform 0.25s ease;
+}
+
+@keyframes wave-animation {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .wave-text:hover {
+    animation-duration: 1s;
+    transform: scale(1.1);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .wave-text,
+  .wave-text:hover,
+  .wave-text:active,
+  .wave-text:focus-visible {
+    animation-duration: 3s !important;
+    transform: none !important;
+  }
+}
+
+.wave-login-btn {
+  background: linear-gradient(90deg, #3d99f5, #c0c0c0, #3d99f5, #c0c0c0) !important;
+  background-size: 300% 100% !important;
+  animation: wave-animation 3s ease-in-out infinite !important;
+  border: none !important;
+  transition: all 0.3s ease !important;
+}
+
+.wave-login-btn:hover {
+  animation-duration: 1.5s !important;
+}
+
+.wave-login-btn:disabled {
+  opacity: 0.7 !important;
+  cursor: not-allowed !important;
+}
+
+/* Notification Modal Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slideUp {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-out;
+}
+/* Enhanced Responsive Utilities */
+/* Mobile First Approach */
+@media (max-width: 640px) {
+  .responsive-padding {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  /* Mobile-specific text sizing */
+  .mobile-text-sm { font-size: 0.875rem !important; }
+  .mobile-text-base { font-size: 1rem !important; }
+  .mobile-text-lg { font-size: 1.125rem !important; }
+  
+  /* Mobile spacing */
+  .mobile-p-2 { padding: 0.5rem !important; }
+  .mobile-p-4 { padding: 1rem !important; }
+  .mobile-mb-4 { margin-bottom: 1rem !important; }
+  
+  /* Mobile grid adjustments */
+  .mobile-grid-1 { grid-template-columns: 1fr !important; }
+  .mobile-gap-2 { gap: 0.5rem !important; }
+  .mobile-gap-4 { gap: 1rem !important; }
+}
+
+/* Tablet breakpoint */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .tablet-grid-2 { grid-template-columns: repeat(2, 1fr) !important; }
+  .tablet-grid-3 { grid-template-columns: repeat(3, 1fr) !important; }
+  .tablet-text-lg { font-size: 1.125rem !important; }
+  .tablet-text-xl { font-size: 1.25rem !important; }
+  .tablet-p-6 { padding: 1.5rem !important; }
+  .tablet-gap-6 { gap: 1.5rem !important; }
+  
+  /* Tablet-specific optimizations */
+  .tablet-card {
+    padding: 1.5rem;
+    margin: 0.75rem;
+    border-radius: 1rem;
+  }
+  
+  .tablet-btn {
+    padding: 0.875rem 1.75rem;
+    font-size: 1.125rem;
+    border-radius: 0.75rem;
+  }
+  
+  .tablet-nav {
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+  }
+  
+  /* Tablet form improvements */
+  .tablet-form-input {
+    padding: 1rem;
+    font-size: 1.125rem;
+    border-radius: 0.75rem;
+  }
+}
+
+/* Desktop breakpoint */
+@media (min-width: 1025px) {
+  .desktop-grid-4 { grid-template-columns: repeat(4, 1fr) !important; }
+  .desktop-text-2xl { font-size: 1.5rem !important; }
+  .desktop-text-3xl { font-size: 1.875rem !important; }
+  .desktop-p-8 { padding: 2rem !important; }
+  .desktop-gap-8 { gap: 2rem !important; }
+  
+  /* Desktop-specific optimizations */
+  .desktop-card {
+    padding: 2rem;
+    margin: 1rem;
+    border-radius: 1.25rem;
+  }
+  
+  .desktop-btn {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+    border-radius: 1rem;
+  }
+  
+  .desktop-nav {
+    gap: 2rem;
+    padding: 0 2rem;
+  }
+  
+  /* Desktop form improvements */
+  .desktop-form-input {
+    padding: 1.25rem;
+    font-size: 1.125rem;
+    border-radius: 1rem;
+  }
+  
+  /* Desktop hover effects */
+  .desktop-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+}
+
+/* Prevent horizontal scroll */
+
+
+/* Ensure images are responsive */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Enhanced touch targets and mobile optimizations */
+@media (max-width: 640px) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved mobile navigation */
+  .mobile-nav-item {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.95rem;
+    line-height: 1.35;
+  }
+  
+  /* Mobile form improvements */
+  .mobile-form-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+  }
+  
+  /* Mobile card improvements */
+  .mobile-card {
+    margin: 0.375rem;
+    padding: 0.875rem;
+    border-radius: 0.75rem;
+    width: 100%;
+    max-width: calc(100% - 0.75rem);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+  }
+  
+  /* Mobile button improvements */
+  .mobile-btn {
+    padding: 0.625rem 1rem;
+    font-size: 0.95rem;
+    border-radius: 0.5rem;
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  header {
+    margin-left: 0.75rem !important;
+    margin-right: 0.75rem !important;
+    margin-top: 0.75rem !important;
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+    padding-top: 0.625rem !important;
+    padding-bottom: 0.625rem !important;
+  }
+
+  .layout-content-container {
+    padding-bottom: 1.25rem;
+  }
+
+  .glass-card {
+    border-radius: 0.95rem !important;
+    border-width: 1px !important;
+    border-color: rgba(226, 232, 240, 0.7) !important;
+  }
+
+  .glass-card:not(.header):not(.settings-glass-card),
+  .mobile-form-optimized,
+  .notification-card,
+  .calendar-modal {
+    padding: 0.875rem !important;
+  }
+
+  .mobile-card {
+    margin: 0.25rem !important;
+    padding: 0.75rem !important;
+    border-radius: 0.85rem !important;
+    max-width: calc(100% - 0.5rem) !important;
+    border: 1px solid rgba(226, 232, 240, 0.75) !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .glass-card:not(.header):not(.settings-glass-card):not(.home-hero),
+  .notification-card,
+  .calendar-modal,
+  .subscription-dashboard {
+    border: 1px solid rgba(226, 232, 240, 0.75) !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04) !important;
+  }
+
+  .glass-card h1,
+  .glass-card h2,
+  .glass-card h3,
+  .mobile-card h1,
+  .mobile-card h2,
+  .mobile-card h3 {
+    line-height: 1.15;
+  }
+
+  .mobile-form-optimized input,
+  .mobile-form-optimized select,
+  .mobile-form-optimized textarea,
+  .glass-input,
+  .form-input {
+    min-height: 2.75rem !important;
+  }
+
+  .glass-card p,
+  .mobile-card p {
+    line-height: 1.35;
+  }
+
+  .glass-card .rounded-3xl,
+  .glass-card.rounded-3xl,
+  .mobile-card.rounded-3xl,
+  .rounded-3xl.glass-card,
+  .rounded-3xl.mobile-card {
+    border-radius: 1rem !important;
+  }
+
+  .glass-card .rounded-2xl,
+  .glass-card.rounded-2xl,
+  .mobile-card.rounded-2xl,
+  .rounded-2xl.glass-card,
+  .rounded-2xl.mobile-card {
+    border-radius: 0.85rem !important;
+  }
+}
+
+/* Remove tap highlight on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Better scrolling on iOS */
+.overflow-y-auto, .overflow-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Optimized smooth scroll for better performance */
+.smooth-scroll {
+  scroll-behavior: auto;
+}
+
+/* Ultra-smooth mobile scroll for booking form */
+@media (max-width: 640px) {
+  .mobile-smoothest-scroll {
+    -webkit-transform: none;
+    transform: none;
+    -webkit-backface-visibility: visible;
+    backface-visibility: visible;
+    -webkit-perspective: none;
+    perspective: none;
+    will-change: auto;
+    scroll-behavior: auto;
+  }
+}
+
+/* Performance-optimized smooth scrolling */
+.ultra-smooth-scroll {
+  scroll-behavior: auto;
+}
+
+/* Mobile-specific ultra-smooth scrolling */
+@media (max-width: 640px) {
+  .ultra-smooth-scroll {
+    scroll-behavior: auto;
+    -webkit-transform: none;
+    transform: none;
+    will-change: auto;
+  }
+}
+
+/* Mobile form optimizations */
+.mobile-form-optimized {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+}
+
+/* Enhanced mobile form performance */
+@media (max-width: 640px) {
+  .mobile-form-optimized {
+    /* Disable backdrop blurs and heavy shadows on mobile to improve scroll performance */
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04) !important;
+    /* Reduce form animations */
+    .glass-card {
+      transition: none !important;
+      -webkit-backdrop-filter: none !important;
+      backdrop-filter: none !important;
+    }
+    /* Optimize form grid */
+    .grid {
+      gap: 1rem !important;
+    }
+    /* Reduce spacing for mobile */
+    .space-y-8 > * + * {
+      margin-top: 1.5rem !important;
+    }
+  }
+
+  /* Optimize form inputs (selectors expanded to avoid nested-rule parsing issues) */
+  .mobile-form-optimized input,
+  .mobile-form-optimized select,
+  .mobile-form-optimized textarea {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 0.75rem !important;
+    border-radius: 0.5rem !important;
+    min-height: 44px !important;
+    transition: none !important; /* Remove transitions for better performance */
+  }
+}
+
+/* Settings modal optimizations */
+.settings-modal {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  will-change: transform;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scrollbars in settings content */
+.settings-modal .overflow-y-auto {
+  overflow-x: hidden !important;
+  max-width: 100%;
+}
+
+/* Custom scrollbar styling for settings */
+.settings-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.settings-content::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.settings-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.settings-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Firefox scrollbar */
+.settings-content {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* Ensure proper text wrapping and visibility */
+.settings-modal .truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Fix flex layout issues - allow text to wrap */
+.settings-modal .flex-1 {
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: calc(100% - 60px); /* Ensure space for toggle switches */
+}
+
+/* Improve text readability in settings */
+.settings-modal p {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.4;
+}
+
+/* Ensure toggle switches don't overlap text */
+.settings-modal .flex-shrink-0 {
+  min-width: 50px;
+  flex-shrink: 0;
+}
+
+/* Better spacing for notification cards */
+.settings-modal .space-y-3 > * + * {
+  margin-top: 0.75rem;
+}
+
+/* Ensure proper text spacing */
+.settings-modal .pr-3 {
+  padding-right: 0.75rem;
+}
+
+/* Inner content alignment fixes */
+.settings-content {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+/* Ensure consistent card heights */
+.settings-modal .min-h-\[52px\] {
+  min-height: 52px;
+}
+
+/* Better section spacing */
+.settings-modal .space-y-3 {
+  gap: 0.75rem;
+}
+
+/* Fix any overflow issues */
+.settings-content * {
+  box-sizing: border-box;
+}
+
+
+/* Mobile-optimized smooth scrolling */
+@media (max-width: 640px) {
+  html, body {
+    scroll-padding-top: 60px; /* account for fixed header */
+  }
+
+  /* Scrollable containers need touch-friendly settings */
+  .overflow-y-auto, .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Reduce glass-card animation overhead on mobile */
+  .glass-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+  }
+
+  .glass-card:hover {
+    transform: none !important; /* no hover lift on touch screens */
+  }
+
+  /* Reduce wave animation for perf */
+  .wave-text {
+    animation-duration: 2s !important;
+  }
+}
+
+/* Enhanced Glassmorphism utilities */
+
+/* Global mobile performance overrides: disable expensive effects on small screens */
+@media (max-width: 640px) {
+  /* Turn off backdrop filters globally on mobile */
+  * {
+    --_original-backdrop: initial;
+  }
+
+  /* Catch utility classes like backdrop-blur-sm / backdrop-blur-md etc */
+  /* Ensure Safari/WebKit picks up backdrop blur utilities */
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia) !important;
+    backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia) !important;
+  }
+
+  /* Some elements use inline box-shadow or style props; ensure mobile overrides reduce them */
+  [class*="shadow"], [class*="bg-opacity"], .modal, .fixed, .absolute {
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04) !important;
+  }
+  .glass-card, .glass-input, .glass-button, .notification-card, .modal, .settings-modal, .mobile-form-optimized, .subscription-dashboard, .calendar-modal {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04) !important;
+    transform: none !important;
+    will-change: auto !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+  }
+
+  /* Reduce shadow complexity globally */
+  .shadow-2xl, .shadow-lg, .shadow-md {
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04) !important;
+  }
+
+  /* Disable expensive effects on mobile */
+  .hover\:scale-105:hover, .hover\:-translate-y-1:hover, .desktop-hover:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+
+  /* Reduce animation complexity on major blocks to optimize frame rate */
+  .no-mobile-anim * {
+    transition-duration: 0.15s !important;
+    animation-duration: 0.2s !important;
+  }
+
+  .glass-card:hover, .desktop-hover:hover, .group:hover .glass-card {
+    transform: none !important;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04) !important;
+  }
+
+  /* Inputs: keep them responsive but avoid repaints */
+  input, select, textarea, button {
+    -webkit-backface-visibility: visible !important;
+    backface-visibility: visible !important;
+    transform: none !important;
+  }
+}
+
+/* Element-level helper: attach to any element that should explicitly disable blur/shadows on mobile */
+@media (max-width: 640px) {
+  .no-mobile-backdrop {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04) !important;
+    transform: none !important;
+    will-change: auto !important;
+    transition: none !important;
+  }
+
+  /* Also clear text shadows and filters for children to neutralize inline styles on mobile */
+  .no-mobile-backdrop, .no-mobile-backdrop * {
+    text-shadow: none !important;
+    -webkit-filter: none !important;
+    filter: none !important;
+  }
+
+  /* Prevent hover/scale/transform on child elements for touch devices */
+  .no-mobile-backdrop :where(*:hover) {
+    transform: none !important;
+  }
+
+  /* Helper to explicitly disable animations/transitions on mobile for specific elements */
+  .no-mobile-anim, .no-mobile-anim * {
+    transition-duration: 0.25s !important;
+    animation-duration: 0.3s !important;
+    transition-timing-function: ease !important;
+    animation-timing-function: ease !important;
+    animation-delay: 0s !important;
+    will-change: auto !important;
+  }
+}
+.glass-card {
+  background: rgba(255, 255, 255, 0.75);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 20px 40px rgba(17, 17, 23, 0.1), 0 8px 16px rgba(17, 17, 23, 0.06);
+  border-radius: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 25px 50px rgba(17, 17, 23, 0.15), 0 12px 24px rgba(17, 17, 23, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Home hero: keep only the frosted backdrop effect, remove motion */
+.home-hero {
+  /* keep the frosted glass look */
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+  backdrop-filter: blur(12px) saturate(130%);
+  /* Prevent any transitions/animations/movement on the hero */
+  -webkit-transition: none !important;
+  transition: none !important;
+  -webkit-transform: none !important;
+  transform: none !important;
+  animation: none !important;
+  /* Fix the background so it doesn't animate or shift */
+  background-position: center center !important;
+  background-size: cover !important;
+}
+
+/* Ensure child elements don't contribute motion */
+.home-hero > * {
+  -webkit-transition: none !important;
+  transition: none !important;
+  animation: none !important;
+}
+
+.glass-button {
+  background: rgba(255, 255, 255, 0.7);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 20px rgba(17, 17, 23, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+}
+
+.glass-button:hover {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 12px 24px rgba(17, 17, 23, 0.15);
+  transform: translateY(-1px);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.8);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 4px 12px rgba(17, 17, 23, 0.08);
+}
+
+.glass-modal {
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 32px 64px rgba(17, 17, 23, 0.2);
+}
+
+.heading-xl { font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+.heading-lg { font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.02em; }
+.heading-md { font-family: 'Inter', sans-serif; font-weight: 700; }
+.text-secondary { color: #60758a; }
+.muted { color: #6b7280; }
+
+
+/* Focus visible for accessibility */
+*:focus-visible {
+  outline: 2px solid #3d99f5;
+  outline-offset: 2px;
+}
+
+/* Additional Responsive Utilities */
+/* Container queries for better component-level responsiveness */
+@container (max-width: 400px) {
+  .container-sm {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+@container (min-width: 401px) and (max-width: 800px) {
+  .container-md {
+    padding: 1rem;
+    font-size: 1rem;
+  }
+}
+
+@container (min-width: 801px) {
+  .container-lg {
+    padding: 1.5rem;
+    font-size: 1.125rem;
+  }
+}
+
+/* Utility: width stretch fallback for browsers that need WebKit's fill-available */
+.w-stretch {
+  width: -webkit-fill-available;
+  width: stretch;
+}
+
+/* Landscape orientation optimizations */
+@media (orientation: landscape) and (max-height: 500px) {
+  .landscape-compact {
+    padding: 0.5rem;
+    margin: 0.25rem;
+  }
+  
+  .landscape-nav {
+    flex-direction: row;
+    gap: 1rem;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Performance optimizations for mobile devices */
+@media (max-width: 640px) {
+  /* Reduce animations on mobile for better performance */
+  .animate-spin {
+    animation-duration: 1s !important;
+  }
+  
+  .animate-pulse {
+    animation-duration: 1.5s !important;
+  }
+  
+  /* Optimize glass effects for mobile */
+  .glass-card {
+    -webkit-backdrop-filter: blur(5px) !important;
+    backdrop-filter: blur(5px) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+  }
+  
+  /* Reduce complex shadows on mobile */
+  .shadow-lg, .shadow-xl, .shadow-2xl {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Disable hover effects on mobile for better performance */
+  .hover\:scale-105:hover {
+    transform: none !important;
+  }
+  
+  .hover\:shadow-2xl:hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  /* Limit transition duration on mobile for performance.
+     Exclude wave-text so the brand animation is never capped. */
+  *:not(html):not(body):not(.animate-spin):not(.animate-pulse):not(.wave-text) {
+    transition-duration: 0.25s !important;
+    animation-duration: 0.3s !important;
+  }
+
+  /* Keep spinner/pulse at their normal speeds */
+  .animate-spin  { animation-duration: 1s   !important; }
+  .animate-pulse { animation-duration: 1.5s !important; }
+  
+  /* Mobile venue card optimizations */
+  .mobile-venue-card {
+    /* Reduce animations on mobile */
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  /* Optimize backdrop effects */
+  -webkit-backdrop-filter: blur(5px) !important;
+  backdrop-filter: blur(5px) !important;
+    /* Reduce shadow complexity */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  }
+  
+  .mobile-venue-card:hover {
+    transform: translateY(-2px) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+  
+  /* Optimize venue images on mobile */
+  .mobile-venue-card img {
+    transition: transform 0.3s ease !important;
+  }
+  
+  /* Reduce gradient overlays on mobile */
+  .mobile-venue-card .absolute.inset-0 {
+    background: linear-gradient(to top, rgba(0,0,0,0.3), transparent) !important;
+  }
+  
+  /* Mobile venues page optimizations */
+  .mobile-venues-optimized {
+    /* Reduce page-level animations */
+    .glass-card {
+      -webkit-backdrop-filter: blur(5px) !important;
+      backdrop-filter: blur(5px) !important;
+      transition: none !important;
+    }
+    
+    /* Optimize search bar */
+    .glass-card input {
+      font-size: 16px !important;
+      transition: none !important;
+    }
+    
+    /* Reduce grid complexity */
+    .grid {
+      gap: 1rem !important;
+    }
+    
+    /* Optimize venue cards container */
+    .responsive-grid {
+      gap: 1rem !important;
+    }
+  }
+}
+
+.perf-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 320px;
+}
+
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  .dark-mode {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+}
+
+/* React Big Calendar Custom Styles */
+.rbc-calendar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.rbc-header {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-weight: 600;
+  color: #374151;
+  padding: 12px 8px;
+}
+
+.rbc-today {
+  background-color: #eff6ff;
+}
+
+.rbc-event {
+  background: #3d99f5 !important;
+  border: none !important;
+  border-radius: 4px;
+  color: white;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.rbc-event:hover {
+  background: #2d89e5 !important;
+}
+
+.rbc-selected {
+  background-color: #dbeafe !important;
+}
+
+.rbc-slot-selection {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border: 1px solid #3d99f5 !important;
+}
+
+.rbc-toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rbc-toolbar button {
+  background: #f8fafc;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rbc-toolbar button:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
+}
+
+.rbc-toolbar button.rbc-active {
+  background: #3d99f5;
+  color: white;
+  border-color: #3d99f5;
+}
+
+.rbc-toolbar-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* Photo View Custom Styles */
+.photo-view__overlay {
+  background: rgba(0, 0, 0, 0.9) !important;
+}
+
+.photo-view__container {
+  background: transparent !important;
+}
+
+.photo-view__image {
+  border-radius: 8px;
+}
+
+/* =============================================================
+   WAVE-TEXT — canonical speed rule (placed last so it wins).
+   Uses the full 'animation' shorthand so no individual
+   animation-duration override can partially undo it.
+   Applies on: mobile widths, touch devices, coarse-pointer devices.
+   ============================================================= */
+@media (max-width: 640px), (hover: none), (pointer: coarse) {
+  .wave-text,
+  .wave-text:hover,
+  .wave-text:active,
+  .wave-text:focus-visible,
+  .no-mobile-anim .wave-text,
+  .glass-card .wave-text,
+  h2 .wave-text,
+  header .wave-text {
+    /* Restate the full animation so nothing can cap the duration */
+    animation: wave-animation 3s ease-in-out infinite !important;
+    transform: none !important;
+  }
+}
