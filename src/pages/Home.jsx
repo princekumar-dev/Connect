@@ -92,10 +92,10 @@ function Home() {
               </div>
               
               {/* Enhanced Search Bar */}
-              <div className="w-full max-w-2xl">
-                <form onSubmit={handleSearch} className="flex flex-col w-full h-14 sm:h-16 md:h-18">
-                  <div className="glass-card no-mobile-backdrop flex w-full flex-1 items-stretch h-full overflow-hidden rounded-2xl shadow-2xl">
-                    <div className="text-gray-500 flex items-center justify-center pl-4 sm:pl-6">
+              <div className="w-full max-w-[304px] sm:max-w-2xl mx-auto">
+                <form onSubmit={handleSearch} className="flex w-full">
+                  <div className="glass-card no-mobile-backdrop flex w-full items-center overflow-hidden rounded-2xl shadow-2xl">
+                    <div className="text-gray-500 flex h-10 sm:h-16 w-9 sm:w-14 flex-shrink-0 items-center justify-center pl-2 sm:pl-3">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" className="sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 256 256">
                         <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
                       </svg>
@@ -105,10 +105,10 @@ function Home() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={isMobilePlaceholder ? 'Venues or Events' : 'Search for Venues or Events'}
-                      className="flex w-full min-w-0 flex-1 resize-none overflow-hidden text-gray-900 focus:outline-0 focus:ring-0 h-full placeholder:text-gray-500 px-3 sm:px-4 text-sm sm:text-base md:text-lg font-medium leading-normal border-0 bg-transparent mobile-form-input tablet-form-input desktop-form-input"
+                      className="h-10 sm:h-16 flex w-full min-w-0 flex-1 resize-none overflow-hidden text-gray-900 focus:outline-0 focus:ring-0 placeholder:text-gray-500 px-1 sm:px-4 text-[13px] sm:text-base md:text-lg font-medium leading-normal border-0 bg-transparent"
                     />
-                    <div className="flex items-center justify-center pr-2 sm:pr-3">
-                      <button type="submit" disabled={isSearching} className="flex min-w-[80px] sm:min-w-[100px] cursor-pointer items-center justify-center overflow-hidden h-10 sm:h-12 md:h-14 px-4 sm:px-6 text-blue-600 text-sm sm:text-base md:text-lg font-bold leading-normal tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent hover:bg-white/20 rounded-xl mobile-btn tablet-btn desktop-btn">
+                    <div className="flex h-10 sm:h-16 flex-shrink-0 items-center justify-center pr-1.5 sm:pr-3">
+                      <button type="submit" disabled={isSearching} className="flex min-w-[76px] sm:min-w-[100px] cursor-pointer items-center justify-center overflow-hidden h-8 sm:h-12 md:h-14 px-3 sm:px-6 text-[13px] sm:text-base md:text-lg text-blue-600 font-bold leading-normal tracking-wide transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-transparent hover:bg-white/20 rounded-xl">
                         <span className="truncate">{isSearching ? 'Searching...' : 'Search'}</span>
                       </button>
                     </div>

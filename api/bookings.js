@@ -117,9 +117,22 @@ async function getBookings(req, res) {
   try {
     const userEmail = req.headers.useremail || req.query.userEmail
     const isAdmin = req.headers.isadmin === 'true' || req.headers.isAdmin === 'true' || req.query.isAdmin === 'true'
+    const scope = req.query.scope
     
     console.log('API Request - userEmail:', userEmail, 'isAdmin flag:', isAdmin)
     console.log('Headers received:', Object.keys(req.headers))
+
+    if (scope === 'calendar') {
+      const approvedBookings = await Booking.find({ status: 'approved' }).sort({ date: 1, time: 1 }).lean()
+      return res.status(200).json({
+        success: true,
+        bookings: approvedBookings,
+        count: approvedBookings.length,
+        userSpecific: false,
+        isAdmin: false,
+        scope: 'calendar'
+      })
+    }
     
     // Check if user is admin by email or explicit flag
     // Only actual admin email, not principal/secretary (they have high priority but not admin view)

@@ -816,7 +816,7 @@ img {
   }
 
   /* Reduce animation complexity on major blocks to optimize frame rate */
-  .no-mobile-anim * {
+  .no-mobile-anim *:not(.login-wave-button) {
     transition-duration: 0.15s !important;
     animation-duration: 0.2s !important;
   }
@@ -858,7 +858,8 @@ img {
   }
 
   /* Helper to explicitly disable animations/transitions on mobile for specific elements */
-  .no-mobile-anim, .no-mobile-anim * {
+  .no-mobile-anim,
+  .no-mobile-anim *:not(.login-wave-button) {
     transition-duration: 0.25s !important;
     animation-duration: 0.3s !important;
     transition-timing-function: ease !important;
@@ -1044,9 +1045,17 @@ img {
   
   /* Limit transition duration on mobile for performance.
      Exclude wave-text so the brand animation is never capped. */
-  *:not(html):not(body):not(.animate-spin):not(.animate-pulse):not(.wave-text) {
+  *:not(html):not(body):not(.animate-spin):not(.animate-pulse):not(.wave-text):not(.login-wave-button) {
     transition-duration: 0.25s !important;
     animation-duration: 0.3s !important;
+  }
+
+  .login-wave-button {
+    animation-duration: 3s !important;
+  }
+
+  .login-wave-button:hover {
+    animation-duration: 1.5s !important;
   }
 
   /* Keep spinner/pulse at their normal speeds */
@@ -1230,5 +1239,23 @@ img {
     /* Restate the full animation so nothing can cap the duration */
     animation: wave-animation 3s ease-in-out infinite !important;
     transform: none !important;
+  }
+
+  .login-wave-button,
+  .no-mobile-anim .login-wave-button,
+  .no-mobile-anim .login-wave-button:hover,
+  button.login-wave-button,
+  button.login-wave-button:hover {
+    animation: waveButtonAnimation 3s ease-in-out infinite !important;
+    animation-duration: 3s !important;
+    animation-delay: 0s !important;
+    animation-timing-function: ease-in-out !important;
+    transition-duration: 0.3s !important;
+  }
+
+  .login-wave-button:hover,
+  .no-mobile-anim .login-wave-button:hover,
+  button.login-wave-button:hover {
+    animation-duration: 1.5s !important;
   }
 }

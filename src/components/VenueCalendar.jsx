@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { Calendar, momentLocalizer } from 'react-big-calendar'
 import moment from 'moment'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
@@ -10,6 +10,12 @@ function VenueCalendar({ venueName, onDateSelect }) {
   const [bookings, setBookings] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
+  const buildEndDate = (date, time, duration) => {
+    const start = new Date(`${date}T${time || '00:00'}`)
+    const durationHours = parseFloat(duration) || 1
+    return new Date(start.getTime() + (durationHours * 60 * 60 * 1000))
+  }
+
   useEffect(() => {
     fetchBookings()
   }, [venueName])
@@ -17,7 +23,7 @@ function VenueCalendar({ venueName, onDateSelect }) {
   const fetchBookings = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/bookings')
+      const response = await fetch('/api/bookings?scope=calendar')
       const data = await response.json()
       
       if (data.success) {
@@ -29,11 +35,9 @@ function VenueCalendar({ venueName, onDateSelect }) {
           )
           .map(booking => ({
             id: booking._id,
-            title: `${booking.venue} - ${booking.organizer || 'Event'}`,
+            title: booking.organizer || booking.purposeCategory || booking.venue || 'Booked',
             start: new Date(`${booking.date}T${booking.time || '00:00'}`),
-            end: new Date(`${booking.date}T${booking.time || '00:00'}`).setHours(
-              new Date(`${booking.date}T${booking.time || '00:00'}`).getHours() + (booking.duration || 1)
-            ),
+            end: buildEndDate(booking.date, booking.time, booking.duration),
             resource: booking
           }))
         

@@ -43,53 +43,53 @@ const Venues = () => {
     'MS Auditorium': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDd8eFSd1-5Wu-7D4PPy3b2KZOeSg2q68ctGvHwSBihGwh-mDrb_xUaQoBNnffDYf1eNzlFp8xlvxhQ05eVsly3b4HNtvn9pKvcyvKV6bu_SNe_HHT17IRLd-67WeadUpB2wntrcLItcpe4TnrgzE9yaI36fTrdx7EbD8N9BCpverP68hnL0LFsOivIdqZxdeM1KtQARdHNqbR00tVzKB66MfxgNnL_xJ2hqEJve-C-xZQerh0VVvbHdULnneqg2iJZiamHDYL1EtU'
   }
 
-  // Sample venue data
-  const sampleVenues = [
-    {
-      venue: 'KRS Seminar Hall',
-      capacity: 200,
-      status: 'available',
-      statusMessage: 'Available for booking',
-      features: ['Audio System', 'Stage', 'Main Auditorium', 'Projector']
-    },
-    {
-      venue: 'Civil Seminar Hall',
-      capacity: 150,
-      status: 'available',
-      statusMessage: 'Available for booking',
-      features: ['Department Hall', 'Audio System', 'Projector']
-    },
-    {
-      venue: 'ECE Seminar Hall',
-      capacity: 150,
-      status: 'available',
-      statusMessage: 'Available for booking',
-      features: ['Technical Equipment', 'Audio System', 'Smart Board']
-    },
-    {
-      venue: 'MS Auditorium',
-      capacity: 500,
-      status: 'available',
-      statusMessage: 'Available for booking',
-      features: ['Multi-Purpose Hall', 'Audio System', 'Stage', 'Large Capacity']
-    }
-  ]
+  const venueFeatures = {
+    'KRS Seminar Hall': ['Audio System', 'Stage', 'Main Auditorium', 'Projector'],
+    'Civil Seminar Hall': ['Department Hall', 'Audio System', 'Projector'],
+    'ECE Seminar Hall': ['Technical Equipment', 'Audio System', 'Smart Board'],
+    'MS Auditorium': ['Multi-Purpose Hall', 'Audio System', 'Stage', 'Large Capacity']
+  }
 
   // Load venues
   useEffect(() => {
+    let intervalId
+
     const loadVenues = async () => {
       try {
         setLoading(true)
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setVenues(sampleVenues)
+        const response = await fetch('/api/venues')
+        const data = await response.json()
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Failed to load venues')
+        }
+
+        const liveVenues = (data.venues || []).map((venue) => ({
+          ...venue,
+          features: venueFeatures[venue.venue] || []
+        }))
+
+        setVenues(liveVenues)
       } catch (error) {
         console.error('Error loading venues:', error)
+        setVenues([])
       } finally {
         setLoading(false)
       }
     }
+
     loadVenues()
+
+    intervalId = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadVenues()
+      }
+    }, 60000)
+
+    return () => {
+      if (intervalId) {
+        window.clearInterval(intervalId)
+      }
+    }
   }, [])
   // URL search params and local input state
   const [searchParams, setSearchParams] = useSearchParams()
@@ -289,6 +289,14 @@ const Venues = () => {
                           Occupied
                         </span>
                       )}
+                      {venue.status === 'buffer' && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-500/90 backdrop-blur-sm text-white text-xs font-semibold rounded-full">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3a1 1 0 00.293.707l2 2a1 1 0 101.414-1.414L11 9.586V7z" clipRule="evenodd" />
+                          </svg>
+                          Buffer Time
+                        </span>
+                      )}
                     </div>
                     
                     {/* Venue Title Overlay */}
@@ -328,6 +336,25 @@ const Venues = () => {
                           </span>
                         )}
                       </div>
+                    </div>
+
+                    <div className={`rounded-xl border px-4 py-3 ${
+                      venue.status === 'occupied'
+                        ? 'border-red-200 bg-red-50'
+                        : venue.status === 'buffer'
+                          ? 'border-orange-200 bg-orange-50'
+                          : 'border-green-200 bg-green-50'
+                    }`}>
+                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-gray-500">Live Status</p>
+                      <p className={`mt-1 text-sm font-semibold ${
+                        venue.status === 'occupied'
+                          ? 'text-red-700'
+                          : venue.status === 'buffer'
+                            ? 'text-orange-700'
+                            : 'text-green-700'
+                      }`}>
+                        {venue.statusMessage || 'Available for booking'}
+                      </p>
                     </div>
 
                     {/* Venue Features */}
@@ -450,7 +477,7 @@ const Venues = () => {
               </button>
             </div>
             <VenueCalendar 
-              venue={selectedVenue}
+              venueName={selectedVenue}
               onDateSelect={handleDateSelect}
             />
           </div>
