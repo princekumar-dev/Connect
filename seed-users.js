@@ -1,6 +1,7 @@
 import { connectToDatabase } from './lib/mongo.js'
 import { User } from './models.js'
 import bcrypt from 'bcryptjs'
+import { normalizeBookingRole } from './lib/bookingRoles.js'
 
 const testUsers = [
   {
@@ -20,7 +21,7 @@ const testUsers = [
   {
     email: 'hod@msec.edu.in',
     password: 'hod@123',
-    role: 'hod',
+    role: 'staff',
     name: 'Head of Department',
     department: 'Computer Science'
   },
@@ -56,16 +57,33 @@ async function seedUsers() {
         if (existingUser) {
           console.log(`👤 User ${userData.email} already exists, updating password...`)
           const hashed = await bcrypt.hash(userData.password, 10)
+          const effectiveRole = normalizeBookingRole(userData.role)
           existingUser.password = hashed
+          existingUser.role = effectiveRole
           await existingUser.save()
         } else {
           console.log(`➕ Creating new user: ${userData.email}`)
           const hashed = await bcrypt.hash(userData.password, 10)
-          const user = new User({ ...userData, password: hashed })
+          const effectiveRole = normalizeBookingRole(userData.role)
+          const user = new User({
+            ...userData,
+            role: effectiveRole,
+            password: hashed
+          })
           await user.save()
         }
       } catch (error) {
         console.error(`❌ Error creating user ${userData.email}:`, error.message)
+      }
+    }
+
+    console.log('🛠️ Normalizing roles and priorities for all existing users...')
+    const allUsers = await User.find({})
+    for (const user of allUsers) {
+      const effectiveRole = normalizeBookingRole(user.role)
+      if (user.role !== effectiveRole) {
+        user.role = effectiveRole
+        await user.save()
       }
     }
 
@@ -75,9 +93,9 @@ async function seedUsers() {
     const totalUsers = await User.countDocuments()
     console.log(`📊 Total users in database: ${totalUsers}`)
     
-    const users = await User.find({}, 'email role name').lean()
+    const users = await User.find({}, 'email role name priority').lean()
     users.forEach(user => {
-      console.log(`👤 ${user.role.toUpperCase()}: ${user.email} - ${user.name}`)
+      console.log(`👤 ${user.role.toUpperCase()} [${String(user.priority || '').toUpperCase()}]: ${user.email} - ${user.name}`)
     })
     
   } catch (error) {

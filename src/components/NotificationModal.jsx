@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 // Confirmation Dialog Component
 export function ConfirmDialog({ isOpen, onClose, onConfirm, title, message, confirmText = 'Confirm', cancelText = 'Cancel', type = 'danger' }) {
@@ -123,9 +124,9 @@ export function Toast({ isOpen, onClose, message, type = 'success', duration = 3
 
   const style = typeStyles[type] || typeStyles.success
 
-  return (
-    <div className="fixed top-4 right-4 z-50 animate-slideInRight">
-      <div className={`${style.bg} text-white px-6 py-4 rounded-lg shadow-2xl max-w-md flex items-center gap-3 relative overflow-hidden`}>
+  const toastContent = (
+    <div className="fixed z-50 pointer-events-none top-2 left-4 right-4 sm:top-6 sm:left-auto sm:right-6 sm:max-w-md animate-slideInTop sm:animate-slideInRight">
+      <div className={`${style.bg} text-white px-6 py-4 rounded-lg shadow-2xl w-full sm:w-auto flex items-center gap-3 relative overflow-hidden pointer-events-auto`}>
         {/* Icon */}
         <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center bg-white bg-opacity-20 rounded-full font-bold">
           {style.icon}
@@ -158,6 +159,8 @@ export function Toast({ isOpen, onClose, message, type = 'success', duration = 3
       </div>
     </div>
   )
+
+  return createPortal(toastContent, document.body)
 }
 
 // Alert Dialog (non-blocking, like alert but styled)

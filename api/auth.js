@@ -1,6 +1,7 @@
 import { connectToDatabase } from '../lib/mongo.js'
 import { User } from '../models.js'
 import bcrypt from 'bcryptjs'
+import { normalizeBookingRole } from '../lib/bookingRoles.js'
 
 function isValidMsecEmail(email = '') {
   return /^[^\s@]+@msec\.edu\.in$/i.test(email.trim())
@@ -69,7 +70,7 @@ export default async function handler(req, res) {
           id: user._id,
           email: user.email,
           name: user.name,
-          role: user.role,
+          role: normalizeBookingRole(user.role),
           department: user.department
         }
       })

@@ -1,17 +1,38 @@
 import mongoose from 'mongoose'
 
+function normalizeUserRole(role = 'staff') {
+  const normalized = String(role || 'staff').trim().toLowerCase()
+  return ['admin', 'principal', 'secretary', 'staff'].includes(normalized)
+    ? normalized
+    : 'staff'
+}
+
+function getPriorityByRole(role = 'staff') {
+  const normalized = normalizeUserRole(role)
+  if (normalized === 'secretary') return 'highest'
+  if (normalized === 'principal') return 'high'
+  if (normalized === 'admin') return 'medium'
+  return 'low'
+}
+
 // User Schema
 const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['admin', 'principal', 'hod', 'secretary', 'staff', 'user'], default: 'user' },
+  role: { type: String, enum: ['admin', 'principal', 'secretary', 'staff'], default: 'staff' },
   name: { type: String, required: true },
   // Whether bookings from this user should be auto-approved
   autoApprove: { type: Boolean, default: false },
-  // Priority can affect booking handling (client uses 'low'|'high')
-  priority: { type: String, enum: ['low', 'high'], default: 'low' },
+  // Role-based priority category for user management display and policies.
+  priority: { type: String, enum: ['low', 'medium', 'high', 'highest'], default: 'low' },
   department: String,
   createdAt: { type: Date, default: Date.now }
+})
+
+UserSchema.pre('save', function(next) {
+  this.role = normalizeUserRole(this.role)
+  this.priority = getPriorityByRole(this.role)
+  next()
 })
 
 // Event Schema

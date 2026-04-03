@@ -563,7 +563,7 @@ function BookingStatus() {
                             </p>
                           )}
                           <p className="text-[#637588] text-xs font-medium">
-                            Date: {formatDate(booking.date)}
+                            Booked on: {formatDate(booking.createdAt || booking.bookedAt || booking.date)}
                           </p>
                           {booking.bookedAt && (
                             <p className="text-[#637588] text-xs font-medium">
@@ -617,9 +617,13 @@ function BookingStatus() {
                           <div className="flex gap-2 mt-2">
                             <button
                               onClick={() => handleDeleteClick(booking._id)}
-                              className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-xs rounded font-medium transition-colors"
+                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-[0px] rounded font-medium transition-colors"
                               title="Delete this booking"
                             >
+                              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m5 4v6m4-6v6M15 3H9l1 4h4l1-4z" />
+                              </svg>
+                              <span className="text-xs">Delete</span>
                               🗑 Delete
                             </button>
                           </div>

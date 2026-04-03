@@ -18,7 +18,7 @@ function ManageUsers() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('user')
+  const [role, setRole] = useState('staff')
   const [isAddingUser, setIsAddingUser] = useState(false)
 
   const navigate = useNavigate()
@@ -59,7 +59,7 @@ function ManageUsers() {
         id: u._id || u.id || u.id,
         name: u.name || '',
         email: u.email || '',
-        role: u.role || 'user',
+        role: u.role || 'staff',
         autoApprove: !!u.autoApprove,
         priority: u.priority || 'low',
         // keep other fields if present
@@ -183,7 +183,7 @@ function ManageUsers() {
       setName('')
       setEmail('')
       setPassword('')
-      setRole('user')
+      setRole('staff')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -433,11 +433,10 @@ function ManageUsers() {
                     <div>
                       <label className="text-sm font-medium text-gray-700 mb-2 block">Role</label>
                       <select value={role} onChange={e => setRole(e.target.value)} className="form-input p-4 rounded-lg w-full">
+                        <option value="admin">admin</option>
                         <option value="principal">principal</option>
                         <option value="secretary">secretary</option>
-                        <option value="hod">hod</option>
                         <option value="staff">staff</option>
-                        <option value="user">user</option>
                       </select>
                     </div>
 

@@ -481,7 +481,7 @@ function Bookings() {
                     </div>
 
                     {/* Role Distribution */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 p-4 mb-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-4 mb-4">
                       <div className="bg-purple-50 p-3 rounded-lg text-center shadow-sm">
                         <div className="text-xl font-bold text-purple-600 mb-1">
                           {bookings.filter(b => (b.userRole || '').toLowerCase() === 'admin').length}
@@ -502,21 +502,12 @@ function Bookings() {
                       </div>
                       <div className="bg-teal-50 p-3 rounded-lg text-center shadow-sm">
                         <div className="text-xl font-bold text-teal-600 mb-1">
-                          {bookings.filter(b => (b.userRole || '').toLowerCase() === 'staff').length}
+                          {bookings.filter(b => {
+                            const r = (b.userRole || 'staff').toLowerCase()
+                            return !['admin', 'principal', 'secretary'].includes(r)
+                          }).length}
                         </div>
                         <div className="text-xs text-teal-800 font-medium">Staff</div>
-                      </div>
-                      <div className="bg-orange-50 p-3 rounded-lg text-center shadow-sm">
-                        <div className="text-xl font-bold text-orange-600 mb-1">
-                          {bookings.filter(b => (b.userRole || '').toLowerCase() === 'hod').length}
-                        </div>
-                        <div className="text-xs text-orange-800 font-medium">HOD</div>
-                      </div>
-                      <div className="bg-pink-50 p-3 rounded-lg text-center shadow-sm">
-                        <div className="text-xl font-bold text-pink-600 mb-1">
-                          {bookings.filter(b => !b.userRole || b.userRole === '').length}
-                        </div>
-                        <div className="text-xs text-pink-800 font-medium">Users</div>
                       </div>
                     </div>
                   </>

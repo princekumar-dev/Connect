@@ -21,7 +21,7 @@ async function seedDemoData(db) {
 	today.setHours(12,0,0,0)
 	const tomorrow = new Date(today.getTime() + 24*60*60*1000)
 
-	// Create demo bookings for staff and hod
+	// Create demo bookings for two staff accounts
 	const staffBooking = {
 		bookingId: 'BK-STAFF-' + Date.now() + '-' + Math.random().toString(36).slice(2,7).toUpperCase(),
 		venue: 'Main Hall',
@@ -39,18 +39,18 @@ async function seedDemoData(db) {
 		updatedAt: new Date()
 	}
 	const hodBooking = {
-		bookingId: 'BK-HOD-' + Date.now() + '-' + Math.random().toString(36).slice(2,7).toUpperCase(),
+		bookingId: 'BK-STAFF2-' + Date.now() + '-' + Math.random().toString(36).slice(2,7).toUpperCase(),
 		venue: 'Auditorium',
 		date: tomorrow,
 		time: '03:00 PM',
 		duration: 1,
 		attendees: 100,
-		organizer: 'HOD Organizer',
+		organizer: 'Faculty Organizer',
 		email: 'hod@msec.edu.in',
-		purpose: 'Demo Booking - HOD',
+		purpose: 'Demo Booking - Staff',
 		purposeCategory: 'Events',
 		status: 'pending',
-		userRole: 'hod',
+		userRole: 'staff',
 		createdAt: new Date(),
 		updatedAt: new Date()
 	}
@@ -247,7 +247,7 @@ async function main() {
 	)
 	await sendAdminNotification(
 		'❌ Booking Rejected', 
-		`HOD: ${seeded.hodBooking.venue} on ${new Date(seeded.hodBooking.date).toLocaleDateString()} at ${seeded.hodBooking.time} - REJECTED`
+		`Staff: ${seeded.hodBooking.venue} on ${new Date(seeded.hodBooking.date).toLocaleDateString()} at ${seeded.hodBooking.time} - REJECTED`
 	)
 	await sendAdminNotification(
 		'🔄 Venue Reassigned', 

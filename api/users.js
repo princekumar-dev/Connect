@@ -1,6 +1,7 @@
 import { connectToDatabase } from '../lib/mongo.js'
 import { User } from '../models.js'
 import bcrypt from 'bcryptjs'
+import { normalizeBookingRole } from '../lib/bookingRoles.js'
 
 function isValidMsecEmail(email = '') {
   return /^[^\s@]+@msec\.edu\.in$/i.test(email.trim())
@@ -25,7 +26,7 @@ export default async function handler(req, res) {
         id: u._id,
         name: u.name,
         email: u.email,
-        role: u.role,
+        role: normalizeBookingRole(u.role),
         autoApprove: !!u.autoApprove,
         priority: u.priority || 'low',
         createdAt: u.createdAt
@@ -55,14 +56,20 @@ export default async function handler(req, res) {
         name,
         email: normalizedEmail,
         password: hashed,
-        role: role || 'user',
-        autoApprove: !!autoApprove,
-        priority: priority || 'low'
+        role: normalizeBookingRole(role),
+        autoApprove: !!autoApprove
       })
 
       await user.save()
       // return safe user object
-      const safe = { id: user._id, name: user.name, email: user.email, role: user.role, autoApprove: user.autoApprove, priority: user.priority }
+      const safe = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: normalizeBookingRole(user.role),
+        autoApprove: user.autoApprove,
+        priority: user.priority
+      }
       return res.status(201).json({ success: true, user: safe })
     }
 
@@ -94,7 +101,7 @@ export default async function handler(req, res) {
 
       if (action === 'priority') {
         const { priority } = req.body
-        if (!['low','high'].includes(priority)) return res.status(400).json({ success: false, error: 'invalid priority' })
+        if (!['low','medium','high','highest'].includes(priority)) return res.status(400).json({ success: false, error: 'invalid priority' })
         const u = await User.findByIdAndUpdate(userId, { priority }, { new: true }).lean()
         return res.status(200).json({ success: true, user: { id: u._id, priority: u.priority } })
       }

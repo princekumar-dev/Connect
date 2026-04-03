@@ -8,7 +8,7 @@
       let r = await fetch(base + '/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: 'DeleteCheck', email, password: 'TempDel123!', role: 'user' })
+        body: JSON.stringify({ name: 'DeleteCheck', email, password: 'TempDel123!', role: 'staff' })
       })
       console.log('POST status', r.status)
       const text = await r.text()

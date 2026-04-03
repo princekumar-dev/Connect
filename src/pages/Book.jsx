@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Toast, AlertDialog } from '../components/NotificationModal'
 
+const BOOKING_COOLDOWN_MINUTES = 30
+const ROLE_PRIORITY = {
+  secretary: 4,
+  principal: 3,
+  admin: 2,
+  staff: 1
+}
+
 function Book() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -79,6 +87,19 @@ function Book() {
     }
   }, [formData.attendees])
 
+  useEffect(() => {
+    const hall = searchParams.get('hall')
+    const date = searchParams.get('date')
+    const time = searchParams.get('time')
+    if (!hall && !date && !time) return
+    setFormData((prev) => ({
+      ...prev,
+      ...(hall ? { venue: hall } : {}),
+      ...(date ? { date } : {}),
+      ...(time ? { time } : {})
+    }))
+  }, [searchParams])
+
   const fetchVenues = async () => {
     try {
       const response = await fetch('/api/venues')
@@ -107,13 +128,22 @@ function Book() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
+
+    if (name === 'date' && value) {
+      const selectedDate = new Date(`${value}T00:00:00`)
+      if (selectedDate.getDay() === 0) {
+        setToast({ isOpen: true, message: 'Sunday is a holiday. Please choose another day.', type: 'warning' })
+        return
+      }
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
     
     // Check for conflicts when venue, date, or time changes
-    if (name === 'venue' || name === 'date' || name === 'time') {
+    if (name === 'venue' || name === 'date' || name === 'time' || name === 'duration') {
       const newData = { ...formData, [name]: value }
       if (newData.venue && newData.date && newData.time && newData.duration) {
         checkConflict(newData.venue, newData.date, newData.time, newData.duration)
@@ -123,26 +153,14 @@ function Book() {
     }
   }
 
-  // Helper function to calculate end time with buffer based on venue capacity
-  const calculateEndTime = (startTime, durationHours, venueName) => {
+  const getRolePriority = (role) => ROLE_PRIORITY[(role || 'staff').toLowerCase()] || ROLE_PRIORITY.staff
+
+  // Helper function to calculate end time with cooldown.
+  const calculateEndTime = (startTime, durationHours) => {
     const [hours, minutes] = startTime.split(':').map(Number)
     const startMinutes = hours * 60 + minutes
     const bookingEndMinutes = startMinutes + (durationHours * 60)
-    
-    // Add buffer time based on venue capacity
-    // Larger venues need more time to clear out
-    const venueCapacities = {
-      'KRS Seminar Hall': 200,
-      'Civil Seminar Hall': 150,
-      'ECE Seminar Hall': 150,
-      'MS Auditorium': 500
-    }
-    
-    const capacity = venueCapacities[venueName] || 150
-    // 30 minutes buffer for large venues (capacity > 250), 15 minutes for smaller venues
-    const bufferMinutes = capacity > 250 ? 30 : 15
-    
-    const endMinutes = bookingEndMinutes + bufferMinutes
+    const endMinutes = bookingEndMinutes + BOOKING_COOLDOWN_MINUTES
     const endHours = Math.floor(endMinutes / 60) % 24
     const endMins = endMinutes % 60
     return `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`
@@ -162,8 +180,11 @@ function Book() {
 
       if (data.success && data.hasConflict) {
         const conflict = data.conflict
-        const userRole = loggedInUser?.role || 'user'
-        const conflictRole = conflict.bookedBy || 'user'
+        const userRole =
+          loggedInUser?.role ||
+          (typeof localStorage !== 'undefined' ? localStorage.getItem('userRole') : null) ||
+          'staff'
+        const conflictRole = conflict.bookedBy || 'staff'
         
         // Format duration for display
         const conflictDuration = conflict.duration || 1
@@ -172,14 +193,13 @@ function Book() {
           : `${conflictDuration * 60} minutes`
         
         // Calculate when the hall will be free
-        const endTime = calculateEndTime(conflict.time, conflictDuration, conflict.venue)
-        const freeTimeText = `The hall will be free after ${endTime}.`
+        const endTime = conflict.nextAvailableTime || calculateEndTime(conflict.time, conflictDuration)
         
         // Determine if current user can override
-        const isPriority = ['admin', 'principal', 'secretary'].includes(userRole.toLowerCase())
-        const conflictIsPriority = ['admin', 'principal', 'secretary'].includes(conflictRole.toLowerCase())
+        const currentPriority = getRolePriority(userRole)
+        const conflictPriority = getRolePriority(conflictRole)
         
-        if (conflictIsPriority || !isPriority) {
+        if (currentPriority <= conflictPriority) {
           setConflictWarning({
             message: `⚠️ Venue booked by ${conflict.organizer} at ${conflict.time}. Free after ${endTime}.`,
             canOverride: false,
@@ -206,11 +226,17 @@ function Book() {
     setIsLoading(true)
 
     try {
+      const requesterEmail = loggedInUser?.email || formData.email
+      const requesterRole =
+        loggedInUser?.role ||
+        (typeof localStorage !== 'undefined' ? localStorage.getItem('userRole') : '') ||
+        ''
       const response = await fetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'userEmail': formData.email
+          'userEmail': requesterEmail,
+          'userRole': requesterRole
         },
         body: JSON.stringify(formData)
       })
@@ -225,36 +251,14 @@ function Book() {
         // Clear conflict warning
         setConflictWarning(null)
 
-        // If booking was auto-approved, navigate based on user role
-        const createdBooking = data.booking
-        const userRole = loggedInUser?.role || 'user'
-        const isAdmin = userRole.toLowerCase() === 'admin'
-        
-        if (createdBooking && createdBooking.status === 'approved') {
-          // Admin goes to /bookings, others go to /booking-status
-          const targetPage = isAdmin ? '/bookings' : '/booking-status'
-          setTimeout(() => navigate(targetPage), 2000)
-          return
-        }
-
-        // Reset form for pending bookings
-        setFormData({
-          venue: '',
-          date: '',
-          time: '',
-          duration: '1',
-          attendees: '',
-          organizer: loggedInUser?.name || loggedInUser?.email || '',
-          email: loggedInUser?.email || '',
-          purpose: '',
-          purposeCategory: 'Other'
-        })
+        // Always take user to booking status after a successful booking.
+        setTimeout(() => navigate('/booking-status'), 1200)
       } else {
         // Show detailed error message including conflict info if available
         if (data.conflict) {
           const conflictDuration = data.conflict.duration || 1
-          const endTime = calculateEndTime(data.conflict.time, conflictDuration, data.conflict.venue)
-          const conflictMsg = `Venue booked by ${data.conflict.organizer} at ${data.conflict.time}. Free after ${endTime}.`
+          const endTime = data.conflict.nextAvailableTime || calculateEndTime(data.conflict.time, conflictDuration)
+          const conflictMsg = `Venue booked by ${data.conflict.organizer} (${data.conflict.bookedBy || 'staff'}) at ${data.conflict.time}. Available again at ${endTime} after a ${BOOKING_COOLDOWN_MINUTES}-minute cooldown.`
           setAlertDialog({ 
             isOpen: true, 
             title: '❌ Booking Conflict', 
@@ -275,7 +279,7 @@ function Book() {
 
   return (
   <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 smooth-scroll mobile-smoothest-scroll mobile-form-optimized no-mobile-anim">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-20 sm:pb-8">
         <div className="max-w-4xl mx-auto">
           {/* Header Section */}
           <div className="mb-8">
@@ -386,7 +390,7 @@ function Book() {
                   </p>
                   {!conflictWarning.canOverride && (
                     <p className="text-xs text-red-600 mt-2">
-                      Please choose a different time or venue to proceed.
+                      Please choose a different time or wait until the 30-minute cooldown ends.
                     </p>
                   )}
                 </div>

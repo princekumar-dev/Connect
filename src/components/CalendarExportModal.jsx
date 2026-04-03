@@ -1,17 +1,30 @@
-import { useState } from 'react'
-import { getCalendarExportOptions } from '../utils/calendarExport'
+import { useState, useMemo } from 'react'
+import { getCalendarExportOptions, getBookingStartEnd } from '../utils/calendarExport'
 
 function CalendarExportModal({ isOpen, onClose, booking }) {
   const [isExporting, setIsExporting] = useState(false)
 
-  if (!isOpen || !booking) return null
+  const exportOptions = useMemo(() => (booking ? getCalendarExportOptions(booking) : []), [booking])
 
-  const exportOptions = getCalendarExportOptions(booking)
+  const whenLabel = useMemo(() => {
+    if (!booking) return ''
+    const { start } = getBookingStartEnd(booking)
+    if (start && !Number.isNaN(start.getTime())) {
+      return start.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+    }
+    try {
+      return `${new Date(booking.date).toLocaleDateString()} at ${booking.time || '—'}`
+    } catch {
+      return `${booking.date} at ${booking.time || '—'}`
+    }
+  }, [booking])
+
+  if (!isOpen || !booking) return null
 
   const handleExport = async (option) => {
     try {
       setIsExporting(true)
-      await option.action()
+      await Promise.resolve(option.action())
     } catch (error) {
       console.error('Export error:', error)
     } finally {
@@ -47,11 +60,13 @@ function CalendarExportModal({ isOpen, onClose, booking }) {
         {/* Booking Info */}
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
           <h4 className="font-semibold text-gray-900 mb-2">{booking.venue}</h4>
+          <p className="text-sm text-gray-600">{whenLabel}</p>
           <p className="text-sm text-gray-600">
-            {new Date(booking.date).toLocaleDateString()} at {booking.time}
-          </p>
-          <p className="text-sm text-gray-600">
-            Duration: {booking.duration || 1} hour(s)
+            Duration:{' '}
+            {(() => {
+              const d = parseFloat(booking.duration) || 1
+              return d >= 1 ? `${d} hour${d !== 1 ? 's' : ''}` : `${Math.round(d * 60)} minutes`
+            })()}
           </p>
         </div>
 

@@ -71,8 +71,8 @@ function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 no-mobile-anim">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="home-page-shell min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 no-mobile-anim">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-1 sm:py-8">
         <div className="max-w-6xl mx-auto">
           {/* Hero Section */}
           <div className="mb-12">
@@ -212,7 +212,7 @@ function Home() {
           </div>
           
           {/* Contact Us Section */}
-          <div className="mb-12">
+          <div className="mb-6 sm:mb-12">
             <div className="glass-card no-mobile-backdrop p-8 text-center rounded-3xl">
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4">Get in Touch</h2>
               <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">

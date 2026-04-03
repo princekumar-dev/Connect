@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Settings from './Settings'
+import NotificationCenter from './NotificationCenter'
 
 function Header() {
   const location = useLocation()
@@ -13,6 +14,9 @@ function Header() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false)
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0)
+  const [recentNotificationCount, setRecentNotificationCount] = useState(0)
   const [isSmallViewport, setIsSmallViewport] = useState(() => {
     if (typeof window === 'undefined') return false
     // Tailwind's `lg` breakpoint is 1024px. We consider "small viewport"
@@ -71,6 +75,7 @@ function Header() {
     // Ensure route changes never leave behind mobile overlays or body scroll locks.
     setIsMobileMenuOpen(false)
     setIsSettingsOpen(false)
+    setIsNotificationOpen(false)
     document.body.style.overflow = ''
     document.body.style.position = ''
     document.body.style.width = ''
@@ -108,6 +113,48 @@ function Header() {
       setUserRole(role || '')
     }
   }
+
+  const handleNotificationCountsUpdate = ({ unreadCount = 0, recentCount = 0 } = {}) => {
+    setUnreadNotificationCount(unreadCount)
+    setRecentNotificationCount(recentCount)
+  }
+
+  const loadNotificationCounts = async () => {
+    if (!isLoggedIn || !userEmail) {
+      setUnreadNotificationCount(0)
+      setRecentNotificationCount(0)
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/notifications/user/${encodeURIComponent(userEmail)}?limit=100`, {
+        headers: { userEmail }
+      })
+      const data = await response.json()
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Failed to load notifications')
+      }
+
+      setUnreadNotificationCount(data.unreadCount || 0)
+      setRecentNotificationCount(data.recentCount || 0)
+    } catch (error) {
+      console.error('Failed to load notification counts:', error)
+      setUnreadNotificationCount(0)
+      setRecentNotificationCount(0)
+    }
+  }
+
+  useEffect(() => {
+    loadNotificationCounts()
+
+    if (!isLoggedIn || !userEmail) return undefined
+
+    const intervalId = window.setInterval(() => {
+      loadNotificationCounts()
+    }, 30000)
+
+    return () => window.clearInterval(intervalId)
+  }, [isLoggedIn, userEmail])
 
   const handleLogout = () => {
     // Clear both new and old auth systems
@@ -273,6 +320,26 @@ function Header() {
             ) : (
               <div className="flex items-center gap-2 relative">
                 <button
+                  onClick={() => {
+                    setIsNotificationOpen((prev) => !prev)
+                    setIsSettingsOpen(false)
+                  }}
+                  className="relative flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[#f0f2f5] transition-colors"
+                  aria-label="Notifications"
+                  title="Notifications"
+                >
+                  <svg className="w-5 h-5 text-[#111418]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] leading-4 font-bold text-center">
+                      {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
                   onClick={() => setIsSettingsOpen(!isSettingsOpen)}
                   className="flex items-center gap-2 px-3 h-10 rounded-lg hover:bg-[#f0f2f5] transition-colors group"
                   title="Settings"
@@ -324,7 +391,8 @@ function Header() {
             <>
               <button
                 onClick={() => {
-                  setIsSettingsOpen(true)
+                  setIsNotificationOpen(true)
+                  setIsSettingsOpen(false)
                 }}
                 className="flex items-center justify-center w-8 h-8 text-[#111418] hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0 relative"
                 aria-label="Notifications"
@@ -333,11 +401,17 @@ function Header() {
                 <svg className="w-[18px] h-[18px] sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
+                {unreadNotificationCount > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-600 text-white text-[10px] leading-4 font-bold text-center">
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </span>
+                )}
               </button>
 
               <button
                 onClick={() => {
                   setIsSettingsOpen(true)
+                  setIsNotificationOpen(false)
                 }}
                 className="flex items-center justify-center w-8 h-8 text-[#111418] hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0"
                 aria-label="Open settings"
@@ -368,6 +442,15 @@ function Header() {
           userEmail={userEmail}
           userRole={userRole}
           isMobile={true}
+        />
+      )}
+
+      {isLoggedIn && (
+        <NotificationCenter
+          isOpen={isNotificationOpen}
+          onClose={() => setIsNotificationOpen(false)}
+          userEmail={userEmail}
+          onCountsUpdate={handleNotificationCountsUpdate}
         />
       )}
     </header>

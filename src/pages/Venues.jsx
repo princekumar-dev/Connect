@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import VenueCalendar from '../components/VenueCalendar'
 import CalendarExportModal from '../components/CalendarExportModal'
 
@@ -51,6 +51,7 @@ function getStatusMeta(status, statusMessage) {
 }
 
 const Venues = () => {
+  const navigate = useNavigate()
   const [venues, setVenues] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
@@ -202,9 +203,22 @@ const Venues = () => {
     setSelectedVenue(null)
   }
 
-  const handleDateSelect = (date) => {
-    console.log('Selected date:', date)
-    // Handle date selection logic here
+  const handleDateSelect = (start) => {
+    if (!selectedVenue || !start) return
+    const y = start.getFullYear()
+    const m = String(start.getMonth() + 1).padStart(2, '0')
+    const day = String(start.getDate()).padStart(2, '0')
+    const date = `${y}-${m}-${day}`
+    const h = String(start.getHours()).padStart(2, '0')
+    const min = String(start.getMinutes()).padStart(2, '0')
+    const time = `${h}:${min}`
+    const q = new URLSearchParams({
+      hall: selectedVenue,
+      date,
+      time
+    })
+    navigate(`/book?${q.toString()}`)
+    closeCalendarModal()
   }
 
   if (loading) {

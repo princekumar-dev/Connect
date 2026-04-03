@@ -8,10 +8,19 @@ import {
   getAllActiveSubscriptions,
   storeNotification,
   getUserNotifications,
-  markNotificationAsRead
+  markNotificationAsRead,
+  markAllNotificationsAsRead
 } from '../lib/notificationService.js'
 
 const router = express.Router()
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase()
+}
+
+function resolveRequestUserEmail(req) {
+  return normalizeEmail(req.headers.useremail || req.headers['user-email'] || req.body?.userEmail || req.query?.userEmail)
+}
 
 // VAPID Keys from environment variables
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BI3ZQwdtuxxYpepMvZjy5xkuzLbnsjG8J1jfBkGMi0AzbhWDocIASZkq6ocisfwCTnYCHuogo_O-PJSuyfGWwkU'
@@ -211,15 +220,34 @@ router.post('/broadcast', async (req, res) => {
 // Get user's notifications
 router.get('/user/:email', async (req, res) => {
   try {
-    const { email } = req.params
+    const requestedEmail = normalizeEmail(req.params.email)
+    const requestUserEmail = resolveRequestUserEmail(req)
     const limit = parseInt(req.query.limit) || 50
 
-    const result = await getUserNotifications(email, limit)
+    if (!requestedEmail || !requestUserEmail) {
+      return res.status(400).json({ success: false, message: 'userEmail is required' })
+    }
+
+    if (requestedEmail !== requestUserEmail) {
+      return res.status(403).json({ success: false, message: 'You can only view your own notifications' })
+    }
+
+    const result = await getUserNotifications(requestedEmail, limit)
 
     if (result.success) {
+      const notifications = result.notifications || []
+      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000)
+      const unreadCount = notifications.filter(item => !item.read).length
+      const recentCount = notifications.filter((item) => {
+        const ts = new Date(item.createdAt).getTime()
+        return Number.isFinite(ts) && ts >= oneDayAgo
+      }).length
+
       res.json({ 
         success: true, 
-        notifications: result.notifications 
+        notifications,
+        unreadCount,
+        recentCount
       })
     } else {
       res.status(500).json({ 
@@ -240,13 +268,23 @@ router.get('/user/:email', async (req, res) => {
 router.put('/:id/read', async (req, res) => {
   try {
     const { id } = req.params
+    const userEmail = resolveRequestUserEmail(req)
 
-    const result = await markNotificationAsRead(id)
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: 'userEmail is required' })
+    }
+
+    const result = await markNotificationAsRead(id, userEmail)
 
     if (result.success) {
       res.json({ 
         success: true, 
         message: 'Notification marked as read' 
+      })
+    } else if (result.notFound) {
+      res.status(404).json({
+        success: false,
+        message: 'Notification not found for this user'
       })
     } else {
       res.status(500).json({ 
@@ -260,6 +298,31 @@ router.put('/:id/read', async (req, res) => {
       success: false, 
       message: 'Internal server error' 
     })
+  }
+})
+
+// Mark all notifications as read for current user
+router.put('/read-all', async (req, res) => {
+  try {
+    const userEmail = resolveRequestUserEmail(req)
+
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: 'userEmail is required' })
+    }
+
+    const result = await markAllNotificationsAsRead(userEmail)
+    if (!result.success) {
+      return res.status(500).json({ success: false, message: 'Failed to mark all notifications as read' })
+    }
+
+    return res.json({
+      success: true,
+      message: 'All notifications marked as read',
+      modified: result.modified || 0
+    })
+  } catch (error) {
+    console.error('Mark all as read error:', error)
+    return res.status(500).json({ success: false, message: 'Internal server error' })
   }
 })
 

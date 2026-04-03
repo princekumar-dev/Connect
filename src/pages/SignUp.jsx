@@ -53,7 +53,8 @@ function SignUp() {
           name: formData.name.trim(),
           email: formData.email.trim().toLowerCase(),
           password: formData.password,
-          role: 'user'
+          role: 'staff',
+          priority: 'low'
         })
       })
       const data = await response.json().catch(() => ({}))
@@ -62,9 +63,16 @@ function SignUp() {
         return
       }
 
+      const signedUpEmail = formData.email.trim().toLowerCase()
+
       // On success, navigate to login
       setSuccess('Account created. Redirecting to sign in...')
-      setTimeout(() => navigate('/login'), 900)
+      setTimeout(() => navigate('/login', {
+        state: {
+          prefillEmail: signedUpEmail,
+          justSignedUp: true
+        }
+      }), 900)
     } catch (err) {
       console.error('Sign up error:', err)
       setError('An error occurred while creating account. Please try again.')

@@ -27,7 +27,7 @@ function FAQ() {
         },
         {
           q: "What happens if there's a booking conflict?",
-          a: "The system will alert you if your selected time slot conflicts with an existing booking. Priority users (Principal, Secretary, Admin) can override lower-priority bookings."
+          a: "The system alerts you when a slot conflicts with an existing booking or its cooldown period. Secretary bookings have highest priority, followed by Principal, then Admin, then Staff and other regular bookings."
         }
       ]
     },
@@ -50,7 +50,7 @@ function FAQ() {
         },
         {
           q: "What is buffer time?",
-          a: "Buffer time is a cleanup/transition period after each event. It's 15 minutes for smaller venues and 30 minutes for larger venues (MS Auditorium)."
+          a: "Buffer time is the cooldown period after each event. Every venue now has a 30-minute cooldown before the next booking can start."
         }
       ]
     },
@@ -69,7 +69,7 @@ function FAQ() {
         },
         {
           q: "What is the priority system?",
-          a: "Principal and Secretary have highest priority, followed by Admin, then regular users. Higher priority bookings can override lower priority ones if necessary."
+          a: "The booking priority order is Secretary first, Principal next, Admin next, then Staff and other regular bookings. When a higher-priority booking conflicts with a lower-priority one, the system tries to move the lower-priority booking to a suitable available venue automatically."
         },
         {
           q: "Can my approved booking be cancelled?",

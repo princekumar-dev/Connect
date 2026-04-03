@@ -1,4 +1,4 @@
-import { VENUE_CAPACITIES } from '../server-constants.js'
+import { VENUE_BOOKING_COOLDOWN_MINUTES, VENUE_CAPACITIES } from '../server-constants.js'
 import { connectToDatabase } from '../lib/mongo.js'
 import { Booking } from '../models.js'
 
@@ -39,11 +39,7 @@ function getVenueStatus(bookings, venueName) {
     const bookingStartMinutes = hours * 60 + minutes
     const duration = booking.duration || 1
     const bookingEndMinutes = bookingStartMinutes + (duration * 60)
-    
-    // Get venue capacity for buffer calculation
-    const capacity = VENUE_CAPACITIES[venueName] || 0
-    const bufferMinutes = capacity > 250 ? 30 : 15
-    const bookingEndWithBuffer = bookingEndMinutes + bufferMinutes
+    const bookingEndWithBuffer = bookingEndMinutes + VENUE_BOOKING_COOLDOWN_MINUTES
 
     // Check if currently in use
     if (currentTime >= bookingStartMinutes && currentTime < bookingEndMinutes) {
@@ -68,7 +64,7 @@ function getVenueStatus(bookings, venueName) {
       console.log(`${venueName} is in BUFFER until ${bufferEndTime12}`)
       return { 
         status: 'buffer', 
-        message: `In buffer time until ${bufferEndTime12}`,
+        message: `In cooldown until ${bufferEndTime12}`,
         nextAvailable: bookingEndWithBuffer
       }
     }

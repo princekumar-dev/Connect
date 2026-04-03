@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const MSEC_EMAIL_PATTERN = /^[^\s@]+@msec\.edu\.in$/i
 
@@ -10,7 +10,22 @@ function Login() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const location = useLocation()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const prefillEmail = location.state?.prefillEmail
+    if (!prefillEmail) return
+
+    setFormData(prev => ({
+      ...prev,
+      email: prefillEmail
+    }))
+
+    if (location.state?.justSignedUp) {
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location.pathname, location.state, navigate])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
