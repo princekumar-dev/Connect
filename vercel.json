@@ -10,7 +10,7 @@
       "destination": "https://connect-m1wh.onrender.com/api/:path*"
     },
     {
-      "source": "/:path*",
+      "source": "/((?!assets|favicon|manifest|service-worker|images|browserconfig|_redirects|.*\\.png|.*\\.json|.*\\.xml|.*\\.ico|.*\\.webmanifest).*)",
       "destination": "/index.html"
     }
   ],
