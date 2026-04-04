@@ -6,11 +6,11 @@
   "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://connect-m1wh.onrender.com/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://connect-m1wh.onrender.com/api/:path*"
     },
     {
-      "source": "/((?!api/).*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ],
