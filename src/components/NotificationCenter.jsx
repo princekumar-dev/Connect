@@ -62,10 +62,17 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
       const response = await fetch(`/api/notifications/user/${encodeURIComponent(userEmail)}?limit=100`, {
         headers: { userEmail }
       })
-      const data = await response.json()
+      const responseText = await response.text()
+      let data = {}
+      try {
+        data = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        data = {}
+      }
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Failed to fetch notifications')
+        const details = data.message || responseText || `HTTP ${response.status}`
+        throw new Error(details || 'Failed to fetch notifications')
       }
 
       const list = Array.isArray(data.notifications) ? data.notifications : []
@@ -111,10 +118,17 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
         },
         body: JSON.stringify({ userEmail })
       })
-      const data = await response.json()
+      const responseText = await response.text()
+      let data = {}
+      try {
+        data = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        data = {}
+      }
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Failed to mark notification as read')
+        const details = data.message || responseText || `HTTP ${response.status}`
+        throw new Error(details || 'Failed to mark notification as read')
       }
 
       setNotifications((prev) =>
@@ -145,10 +159,17 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
         },
         body: JSON.stringify({ userEmail })
       })
-      const data = await response.json()
+      const responseText = await response.text()
+      let data = {}
+      try {
+        data = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        data = {}
+      }
 
       if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Failed to mark all notifications as read')
+        const details = data.message || responseText || `HTTP ${response.status}`
+        throw new Error(details || 'Failed to mark all notifications as read')
       }
 
       setNotifications((prev) =>

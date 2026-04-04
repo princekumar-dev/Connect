@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/$1"
+      "destination": "https://connect-m1wh.onrender.com/api/$1"
     },
     {
       "source": "/(.*)",

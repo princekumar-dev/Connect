@@ -130,9 +130,17 @@ function Header() {
       const response = await fetch(`/api/notifications/user/${encodeURIComponent(userEmail)}?limit=100`, {
         headers: { userEmail }
       })
-      const data = await response.json()
+      const responseText = await response.text()
+      let data = {}
+      try {
+        data = responseText ? JSON.parse(responseText) : {}
+      } catch {
+        data = {}
+      }
+
       if (!response.ok || !data.success) {
-        throw new Error(data.message || 'Failed to load notifications')
+        const details = data.message || responseText || `HTTP ${response.status}`
+        throw new Error(details || 'Failed to load notifications')
       }
 
       setUnreadNotificationCount(data.unreadCount || 0)
