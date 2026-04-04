@@ -10,7 +10,7 @@
       "destination": "https://connect-m1wh.onrender.com/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ],
