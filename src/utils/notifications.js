@@ -217,7 +217,7 @@ class PushNotificationManager {
       }
 
       this.subscription = subscription;
-      await this.sendSubscriptionToServer(subscription, userEmail);
+      await this.sendSubscriptionToServer(subscription, userEmail, false);
       // Persist per-user preference ON
       this.setUserPrefEnabled(true);
       return subscription;
@@ -254,7 +254,7 @@ class PushNotificationManager {
   }
 
   // Send subscription to server (userEmail can be passed explicitly)
-  async sendSubscriptionToServer(subscription, userEmail = null) {
+  async sendSubscriptionToServer(subscription, userEmail = null, isResync = false) {
     try {
       // If userEmail not provided, try to get from multiple sources
       if (!userEmail) {
@@ -293,7 +293,8 @@ class PushNotificationManager {
         },
         body: JSON.stringify({
           subscription: subscription,
-          userEmail: userEmail
+          userEmail: userEmail,
+          isResync: isResync
         })
       });
 
@@ -499,7 +500,7 @@ class PushNotificationManager {
           this.subscription = existingSubscription;
           if (userPref === true) {
             // Resync to backend only if user had notifications ON
-            await this.sendSubscriptionToServer(existingSubscription);
+            await this.sendSubscriptionToServer(existingSubscription, null, true);
           } else {
             console.log('Skipping auto-resync due to user preference OFF');
           }

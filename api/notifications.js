@@ -36,7 +36,7 @@ webpush.setVapidDetails(
 // Subscribe to push notifications (status -> active)
 router.post('/subscribe', async (req, res) => {
   try {
-    const { subscription, userEmail } = req.body
+    const { subscription, userEmail, isResync } = req.body
 
     if (!subscription || !userEmail) {
       return res.status(400).json({ 
@@ -49,7 +49,8 @@ router.post('/subscribe', async (req, res) => {
 
     if (result.success) {
       // Welcome ping (best-effort)
-      try {
+      if (!isResync) {
+        try {
         await webpush.sendNotification(
           subscription,
           JSON.stringify({
@@ -61,7 +62,8 @@ router.post('/subscribe', async (req, res) => {
             data: { url: '/' }
           })
         )
-      } catch {}
+        } catch {}
+      }
 
       res.json({ success: true, message: 'Subscription active' })
     } else {
