@@ -624,8 +624,8 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
                     </svg>
                   ) : (
                     <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
-                        notificationsEnabled ? 'translate-x-5' : 'translate-x-1'
+                      className={`inline-block h-4 w-4 rounded-full bg-white shadow-md transition-all duration-300 ${
+                        notificationsEnabled ? 'ml-5' : 'ml-1'
                       }`}
                     />
                   )}
@@ -680,8 +680,8 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
                   style={{ touchAction: 'manipulation' }}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform ${
-                      emailNotifications ? 'translate-x-5' : 'translate-x-1'
+                    className={`inline-block h-4 w-4 rounded-full bg-white shadow-md transition-all duration-300 ${
+                      emailNotifications ? 'ml-5' : 'ml-1'
                     }`}
                   />
                 </button>
