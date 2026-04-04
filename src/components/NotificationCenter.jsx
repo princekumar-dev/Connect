@@ -187,6 +187,7 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
   if (!isOpen) return null
 
   const userLabel = String(userEmail || '').split('@')[0] || 'you'
+  const isEmptyState = !loading && !error && notifications.length === 0
 
   const content = (
     <div
@@ -242,7 +243,7 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto p-3 lg:p-6 bg-white min-h-0">
+        <div className={`flex-1 ${isEmptyState ? 'overflow-hidden' : 'overflow-y-auto'} p-3 lg:p-6 bg-white min-h-0`}>
           {loading && (
             <div className="flex items-center justify-center py-12">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#3d99f5]"></div>
@@ -254,18 +255,20 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
           )}
 
           {!loading && !error && notifications.length === 0 && (
-            <div className="text-center py-6 lg:py-8">
-              <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-gray-100 mx-auto mb-3 lg:mb-4 flex items-center justify-center">
-                <svg className="w-6 h-6 lg:w-8 lg:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div className="h-full min-h-[220px] lg:min-h-[260px] flex items-center justify-center text-center">
+              <div className="flex flex-col items-center gap-1.5 lg:gap-2 -translate-y-2 lg:-translate-y-3">
+                <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 lg:w-8 lg:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="text-base lg:text-xl font-semibold text-gray-700 leading-tight">No notifications</p>
+                <p className="text-xs lg:text-sm text-gray-500 leading-tight">Everything is up to date</p>
               </div>
-              <p className="text-base lg:text-xl font-semibold text-gray-700">No notifications</p>
-              <p className="text-xs lg:text-sm text-gray-500 mt-1">Everything is up to date</p>
             </div>
           )}
 
-          {!loading && !error && (
+          {!loading && !error && notifications.length > 0 && (
             <div className="space-y-3">
               {notifications.map((item) => (
                 <button
