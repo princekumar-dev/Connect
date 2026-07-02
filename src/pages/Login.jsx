@@ -99,6 +99,20 @@ function Login() {
     <>
       <TopLoadingBar isLoading={isLoading} />
 
+      <style>{`
+        @keyframes waveButtonAnimation {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+        .login-wave-button {
+          background: linear-gradient(90deg, #3d99f5, #c0c0c0, #3d99f5, #c0c0c0);
+          background-size: 300% 100%;
+          animation: waveButtonAnimation 3s ease-in-out infinite;
+          transition: all 0.3s ease;
+        }
+        .login-wave-button:hover { animation-duration: 1.5s; }
+      `}</style>
+
       <div
         className="relative min-h-screen overflow-hidden flex items-center justify-center px-3 sm:px-4 py-6 sm:py-8 smooth-scroll mobile-smoothest-scroll no-mobile-anim"
         style={{ fontFamily: 'Inter, sans-serif' }}
@@ -189,7 +203,7 @@ function Login() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3.5 sm:py-4 px-6 text-white text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl bg-[#3d99f5] hover:bg-[#2b87e0] active:scale-[0.98] shadow-lg shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="login-wave-button w-full py-3.5 sm:py-4 px-6 text-white text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl shadow-lg shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="truncate">
                     {isLoading ? 'Signing in...' : 'Sign In'}
