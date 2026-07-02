@@ -393,9 +393,6 @@ function Bookings() {
             <div className="rounded-3xl border border-white/70 bg-white/80 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)] p-5 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-blue-700 mb-3">
-                    Admin dashboard
-                  </div>
                   <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-2">
                     All Bookings
                   </h1>
