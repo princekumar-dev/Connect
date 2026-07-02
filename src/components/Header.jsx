@@ -252,7 +252,7 @@ function Header() {
   }
 
   return (
-    <header className={`sticky top-0 z-50 glass-card rounded-[1.35rem] flex items-center justify-between whitespace-nowrap px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 py-1.5 sm:py-4 mx-2 sm:mx-3 md:mx-4 mt-2 sm:mt-3 md:mt-4 min-h-[52px] sm:min-h-0 ${
+    <header className={`sticky top-0 z-50 glass-card rounded-[1.35rem] flex items-center justify-between whitespace-nowrap px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 py-1.5 sm:py-4 mx-2 sm:mx-3 md:mx-4 mt-2 sm:mt-3 md:mt-4 min-h-[52px] sm:min-h-0 border border-white/60 shadow-[0_18px_45px_rgba(15,23,42,0.08)] ${
       isAuthPage
         ? '!bg-white/72 !backdrop-blur-md !border-white/55 !shadow-[0_18px_40px_rgba(15,23,42,0.12)]'
         : '!bg-white md:!bg-[rgba(255,255,255,0.75)]'
@@ -263,14 +263,16 @@ function Header() {
         <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
           <div className="size-7 sm:size-10 md:size-10">
             <img 
-              src="/images/mseclogo.png" 
+              src="/images/mseclogo.webp" 
               alt="MSEC Logo" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h2 className="text-sm sm:text-lg md:text-xl font-bold leading-tight tracking-[-0.015em] whitespace-nowrap">
-            <span className="text-[#111418]">MSEC</span> <span className="wave-text">Connect</span>
-          </h2>
+          <div className="flex flex-col leading-tight">
+            <h2 className="text-sm sm:text-lg md:text-xl font-bold tracking-[-0.015em] whitespace-nowrap">
+              <span className="text-[#111418]">MSEC</span> <span className="wave-text">Connect</span>
+            </h2>
+          </div>
         </div>
 
   {/* Desktop Navigation - Close to Logo */}
@@ -321,7 +323,7 @@ function Header() {
             {!isLoggedIn ? (
               <Link
                 to="/login"
-                className="flex min-w-[70px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#3d99f5] text-white text-sm font-bold leading-normal tracking-[0.015em] whitespace-nowrap"
+                className="flex min-w-[70px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#3d99f5] text-white text-sm font-bold leading-normal tracking-[0.015em] whitespace-nowrap shadow-lg shadow-blue-500/20 transition-transform hover:scale-[1.02]"
               >
                 <span className="truncate">Login</span>
               </Link>
@@ -332,7 +334,7 @@ function Header() {
                     setIsNotificationOpen((prev) => !prev)
                     setIsSettingsOpen(false)
                   }}
-                  className="relative flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[#f0f2f5] transition-colors"
+                  className="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white/60 hover:bg-white/90 border border-white/60 shadow-sm transition-all"
                   aria-label="Notifications"
                   title="Notifications"
                 >
@@ -349,10 +351,10 @@ function Header() {
 
                 <button
                   onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                  className="flex items-center gap-2 px-3 h-10 rounded-lg hover:bg-[#f0f2f5] transition-colors group"
+                  className="flex items-center gap-2 px-3 h-10 rounded-xl bg-white/55 hover:bg-white/90 border border-white/60 shadow-sm transition-all group"
                   title="Settings"
                 >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3d99f5] to-[#2b87e3] flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3d99f5] to-[#2b87e3] flex items-center justify-center shadow-md shadow-blue-500/20">
                     <span className="text-sm font-bold text-white">
                       {userEmail?.charAt(0).toUpperCase()}
                     </span>
@@ -384,7 +386,7 @@ function Header() {
             )}
             <Link
               to="/book"
-              className="flex min-w-[70px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#3d99f5] text-white text-sm font-bold leading-normal tracking-[0.015em] whitespace-nowrap"
+              className="flex min-w-[70px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-10 px-4 bg-[#3d99f5] text-white text-sm font-bold leading-normal tracking-[0.015em] whitespace-nowrap shadow-lg shadow-blue-500/20 transition-transform hover:scale-[1.02]"
             >
               <span className="truncate">Book</span>
             </Link>
@@ -402,7 +404,7 @@ function Header() {
                   setIsNotificationOpen(true)
                   setIsSettingsOpen(false)
                 }}
-                className="flex items-center justify-center w-8 h-8 text-[#111418] hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0 relative"
+                  className="flex items-center justify-center w-8 h-8 text-[#111418] hover:bg-white/80 rounded-xl bg-white/55 border border-white/60 shadow-sm transition-all duration-200 flex-shrink-0 relative"
                 aria-label="Notifications"
                 title="Notifications"
               >
@@ -421,7 +423,7 @@ function Header() {
                   setIsSettingsOpen(true)
                   setIsNotificationOpen(false)
                 }}
-                className="flex items-center justify-center w-8 h-8 text-[#111418] hover:bg-gray-100 rounded-lg transition-colors duration-200 flex-shrink-0"
+                className="flex items-center justify-center w-8 h-8 text-[#111418] hover:bg-white/80 rounded-xl bg-white/55 border border-white/60 shadow-sm transition-all duration-200 flex-shrink-0"
                 aria-label="Open settings"
                 title={userEmail || 'Open settings'}
               >
@@ -434,7 +436,7 @@ function Header() {
           {!isLoggedIn && (
             <Link
               to="/login"
-              className="flex min-w-[72px] items-center justify-center rounded-xl h-10 px-4 bg-[#3d99f5] text-white text-sm font-bold whitespace-nowrap"
+              className="flex min-w-[72px] items-center justify-center rounded-xl h-10 px-4 bg-[#3d99f5] text-white text-sm font-bold whitespace-nowrap shadow-lg shadow-blue-500/20 transition-transform hover:scale-[1.02]"
             >
               <span className="truncate">Login</span>
             </Link>

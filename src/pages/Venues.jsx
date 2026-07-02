@@ -308,6 +308,29 @@ const Venues = () => {
                     </Link>
                   )}
                 </div>
+
+                <div className="mt-8 mx-auto max-w-4xl rounded-3xl border border-white/70 bg-white/80 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)] p-4 sm:p-5">
+                  <form onSubmit={handleSearchSubmit} className="flex items-center gap-3">
+                    <div className="flex h-12 sm:h-14 w-12 sm:w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      value={searchInput}
+                      onChange={(e) => setSearchInput(e.target.value)}
+                      placeholder="Search venues by name"
+                      className="h-12 sm:h-14 flex-1 min-w-0 rounded-2xl border border-slate-200 bg-white/90 px-4 text-sm sm:text-base text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <button
+                      type="submit"
+                      className="hidden sm:inline-flex h-12 sm:h-14 items-center justify-center rounded-2xl bg-blue-600 px-5 text-sm font-bold text-white shadow-lg shadow-blue-500/20 transition-transform hover:scale-[1.02]"
+                    >
+                      Search
+                    </button>
+                  </form>
+                </div>
               </div>
             ) : (
               filteredVenues.map((venue) => {
@@ -482,15 +505,15 @@ const Venues = () => {
 
       {/* Venue Calendar Modal */}
       {showCalendarModal && selectedVenue && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm no-mobile-backdrop flex items-center justify-center z-50 p-4">
+  <div className="fixed inset-0 bg-black/40 backdrop-blur-md no-mobile-backdrop flex items-center justify-center z-50 p-4">
           <div className="glass-modal rounded-2xl p-4 sm:p-6 max-w-6xl w-full max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Availability Calendar - {selectedVenue}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900">Availability Calendar - {selectedVenue}</h2>
               <button
                 onClick={closeCalendarModal}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2.5 sm:p-2 hover:bg-gray-100 rounded-full min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>

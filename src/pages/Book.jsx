@@ -130,8 +130,8 @@ function Book() {
     const { name, value } = e.target
 
     if (name === 'date' && value) {
-      const selectedDate = new Date(`${value}T00:00:00`)
-      if (selectedDate.getDay() === 0) {
+      const selectedDate = new Date(`${value}T00:00:00Z`)
+      if (selectedDate.getUTCDay() === 0) {
         setToast({ isOpen: true, message: 'Sunday is a holiday. Please choose another day.', type: 'warning' })
         return
       }
@@ -174,7 +174,7 @@ function Book() {
 
     try {
       const response = await fetch(
-        `/api/bookings/check-conflict?venue=${encodeURIComponent(venue)}&date=${date}&time=${encodeURIComponent(time)}&duration=${duration}`
+        `/api/bookings?venue=${encodeURIComponent(venue)}&date=${date}&time=${encodeURIComponent(time)}&duration=${duration}`
       )
       const data = await response.json()
 
@@ -284,6 +284,10 @@ function Book() {
           {/* Header Section */}
           <div className="mb-8">
             <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/75 px-4 py-2 text-blue-700 text-xs sm:text-sm font-semibold shadow-sm mb-4">
+                <span className="h-2 w-2 rounded-full bg-blue-500" />
+                Real-time venue checks, recommendations, and conflict handling
+              </div>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-4">
                 Book a Venue
               </h1>
@@ -294,7 +298,22 @@ function Book() {
           </div>
 
           {/* Booking Form */}
-          <div className="glass-card no-mobile-backdrop p-6 rounded-2xl bg-white bg-opacity-90 shadow-md mobile-form-optimized">
+          <div className="glass-card no-mobile-backdrop p-6 rounded-2xl bg-white bg-opacity-90 shadow-md mobile-form-optimized border border-white/60">
+            <div className="mb-6 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-bold">Availability</p>
+                <p className="text-sm font-semibold text-slate-900 mt-1">Live checks before submit</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-bold">Priority</p>
+                <p className="text-sm font-semibold text-slate-900 mt-1">Role-aware conflict handling</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500 font-bold">Notifications</p>
+                <p className="text-sm font-semibold text-slate-900 mt-1">Immediate booking updates</p>
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-8">
               <div className="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-2">
             {/* Venue Selection */}
@@ -415,12 +434,13 @@ function Book() {
               
               {/* Venue Recommendations */}
               {recommendations.length > 0 && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-blue-800 mb-2">Recommended venues for {formData.attendees} attendees:</p>
-                  <div className="space-y-1">
+                <div className="mt-3 p-4 bg-blue-50 rounded-xl border border-blue-100 shadow-sm">
+                  <p className="text-sm font-semibold text-blue-800 mb-3">Recommended venues for {formData.attendees} attendees:</p>
+                  <div className="space-y-2">
                     {recommendations.map((rec) => (
-                      <div key={rec.venue} className={`text-sm ${rec.suitable ? 'text-green-700' : 'text-red-700'}`}>
-                        {rec.venue} (Capacity: {rec.capacity}) - {rec.suitable ? 'Suitable' : 'Too small'}
+                      <div key={rec.venue} className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm ${rec.suitable ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>
+                        <span className="font-semibold">{rec.venue}</span>
+                        <span className="text-xs font-medium">Capacity {rec.capacity} · {rec.suitable ? 'Suitable' : 'Too small'}</span>
                       </div>
                     ))}
                   </div>
@@ -502,7 +522,7 @@ function Book() {
 
           {/* Booking Summary */}
           {(formData.venue || formData.date || formData.time || formData.organizer) && (
-            <div className="mt-8 p-6 bg-gray-50 rounded-xl">
+            <div className="mt-8 p-6 bg-gray-50 rounded-xl border border-gray-200 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Booking Summary</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 {formData.venue && <div><strong>Venue:</strong> {formData.venue}</div>}
@@ -522,7 +542,7 @@ function Book() {
                 <button
                   type="submit"
                   disabled={isLoading || (conflictWarning && !conflictWarning.canOverride)}
-                  className="glass-button flex min-w-[200px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-14 px-8 text-blue-600 text-lg font-bold leading-normal tracking-wide disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105"
+                  className="glass-button flex min-w-[220px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl h-14 px-8 text-blue-600 text-lg font-bold leading-normal tracking-wide disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 shadow-[0_10px_30px_rgba(59,130,246,0.18)]"
                 >
                   <span className="truncate">
                     {isLoading ? 'Booking...' : 

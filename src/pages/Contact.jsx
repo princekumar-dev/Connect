@@ -22,7 +22,7 @@ function Contact() {
                 <div className="inline-flex items-center gap-2 md:gap-3 justify-center mb-4">
                   <div className="w-16 h-16 md:w-20 md:h-20">
                     <img
-                      src="/images/mseclogo.png"
+                      src="/images/mseclogo.webp"
                       alt="MSEC Logo"
                       className="w-full h-full object-contain contact-logo"
                     />

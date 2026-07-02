@@ -79,7 +79,7 @@ function Home() {
             <div
               className="glass-card no-mobile-backdrop home-hero relative flex min-h-[400px] sm:min-h-[500px] lg:min-h-[600px] flex-col gap-6 sm:gap-8 bg-cover bg-center bg-no-repeat items-center justify-center p-6 sm:p-8 lg:p-12 overflow-hidden rounded-3xl"
               style={{
-                backgroundImage: `linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%), url("/images/campus.jpeg")`
+                backgroundImage: `linear-gradient(135deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.3) 50%, rgba(0, 0, 0, 0.5) 100%), url("/images/campus.webp")`
               }}
             >
               <div className="flex flex-col gap-4 text-center px-4 sm:px-6 max-w-4xl">
@@ -121,6 +121,10 @@ function Home() {
           {/* Featured Venues Section */}
           <div className="mb-12">
             <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-4 py-2 text-blue-700 text-xs sm:text-sm font-semibold shadow-sm mb-4">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  Search-ready venue catalog
+                </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-4">
                 Featured Venues
               </h2>

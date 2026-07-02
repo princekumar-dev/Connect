@@ -91,8 +91,10 @@ export function downloadICS(booking) {
   link.rel = 'noopener'
   document.body.appendChild(link)
   link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  setTimeout(() => {
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }, 100)
 }
 
 function formatGoogleDateUTC(date) {

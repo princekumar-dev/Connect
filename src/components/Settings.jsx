@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import Modal from './Modal'
 import { 
   requestNotificationPermission, 
   subscribeToNotifications,
@@ -10,6 +11,7 @@ import {
   getNotificationPermission
   , checkCurrentSubscription
 } from '../utils/notifications'
+import { validatePassword } from '../utils/validation'
 
 function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
   const navigate = useNavigate()
@@ -20,6 +22,15 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
   const [notificationPermission, setNotificationPermission] = useState('default')
   const [notificationLoading, setNotificationLoading] = useState(false)
   const [isInitializing, setIsInitializing] = useState(false)
+  const [showPasswordReset, setShowPasswordReset] = useState(false)
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState('')
   // Detect actual viewport size so we can decide whether to show
   // the centered mobile modal or the desktop right-side panel.
   const [isFullWidthMobile, setIsFullWidthMobile] = useState(() => {
@@ -172,6 +183,14 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
 
     return () => { cancelled = true }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) return
+    setShowPasswordReset(false)
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    setPasswordError('')
+    setPasswordSuccess('')
+  }, [isOpen])
 
   // Detect small mobile widths so we can switch between desktop dropdown
   // and centered mobile modal behavior.
@@ -422,6 +441,73 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
     onClose()
   }
 
+  const openPasswordReset = () => {
+    setPasswordError('')
+    setPasswordSuccess('')
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    setShowPasswordReset(true)
+  }
+
+  const closePasswordReset = () => {
+    if (passwordSaving) return
+    setShowPasswordReset(false)
+    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    setPasswordError('')
+    setPasswordSuccess('')
+  }
+
+  const handlePasswordChangeSubmit = async (e) => {
+    e.preventDefault()
+    setPasswordError('')
+    setPasswordSuccess('')
+
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError('All password fields are required')
+      return
+    }
+
+    const passwordValidation = validatePassword(passwordForm.newPassword)
+    if (passwordValidation) {
+      setPasswordError(passwordValidation)
+      return
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New password and confirmation do not match')
+      return
+    }
+
+    setPasswordSaving(true)
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        setPasswordError(data.error || 'Failed to update password')
+        return
+      }
+
+      setPasswordSuccess('Password updated successfully')
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      setTimeout(() => {
+        closePasswordReset()
+      }, 1200)
+    } catch (error) {
+      setPasswordError(error.message || 'Failed to update password')
+    } finally {
+      setPasswordSaving(false)
+    }
+  }
+
   if (!isOpen) {
     return null
   }
@@ -515,6 +601,33 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
             Account
           </h4>
           <div className="space-y-1">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                openPasswordReset();
+              }}
+              onTouchEnd={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                openPasswordReset();
+              }}
+              className="w-full flex items-center gap-3 p-3 rounded-lg bg-white/6 hover:bg-white/8 active:bg-white/5 transition-colors text-left min-h-[52px] touch-manipulation cursor-pointer"
+              style={{ touchAction: 'manipulation' }}
+            >
+              <svg className="w-4 h-4 text-[#60758a] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c-1.657 0-3 1.343-3 3v3h6v-3c0-1.657-1.343-3-3-3zm-6 3V9a6 6 0 1112 0v5" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#111418]">Reset Password</p>
+                <p className="text-xs text-[#60758a] mt-0.5">Change your account password</p>
+              </div>
+              <svg className="w-4 h-4 text-[#60758a] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
             <button
               type="button"
               onClick={(e) => {
@@ -770,11 +883,98 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
     </div>
   )
 
+  const passwordResetModal = (
+    <Modal isOpen={showPasswordReset} onClose={closePasswordReset} title="Reset Password" maxWidth="max-w-md">
+      <div className="mb-4">
+        <p className="text-sm text-[#60758a]">Update the password for {userEmail}</p>
+      </div>
+
+      <form onSubmit={handlePasswordChangeSubmit} className="space-y-4">
+        <label className="block">
+          <span className="block text-sm font-medium text-[#111418] mb-1">Current Password</span>
+          <input
+            type="password"
+            value={passwordForm.currentPassword}
+            onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
+            className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            autoComplete="current-password"
+            required
+          />
+        </label>
+
+        <label className="block">
+          <span className="block text-sm font-medium text-[#111418] mb-1">New Password</span>
+          <input
+            type="password"
+            value={passwordForm.newPassword}
+            onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))}
+            className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            autoComplete="new-password"
+            required
+          />
+        </label>
+
+        <label className="block">
+          <span className="block text-sm font-medium text-[#111418] mb-1">Confirm New Password</span>
+          <input
+            type="password"
+            value={passwordForm.confirmPassword}
+            onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+            className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            autoComplete="new-password"
+            required
+          />
+        </label>
+
+        {passwordError && (
+          <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {passwordError}
+          </div>
+        )}
+
+        {passwordSuccess && (
+          <div className="rounded-2xl border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
+            {passwordSuccess}
+          </div>
+        )}
+
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+          <button
+            type="button"
+            onClick={closePasswordReset}
+            disabled={passwordSaving}
+            className="flex-1 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={passwordSaving}
+            className="flex-1 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 disabled:opacity-60"
+          >
+            {passwordSaving ? 'Updating...' : 'Update Password'}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  )
+
   if (typeof document !== 'undefined') {
-    return ReactDOM.createPortal(mobileModalContent, document.body)
+    return ReactDOM.createPortal(
+      <>
+        {mobileModalContent}
+        {passwordResetModal}
+      </>,
+      document.body
+    )
   }
 
-  return mobileModalContent
+  return (
+    <>
+      {mobileModalContent}
+      {passwordResetModal}
+    </>
+  )
 }
 
 export default Settings

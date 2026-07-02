@@ -599,3 +599,260 @@ img[width][height] {
   content-visibility: auto;
   contain-intrinsic-size: auto 500px;
 }
+
+/* ========================================
+   19. RESPONSIVE COMPLETION LAYER
+   Keeps desktop styling intact while tightening mobile/tablet layouts.
+   ======================================== */
+
+@media (max-width: 1023px) {
+  :root {
+    --mobile-bottom-nav-offset: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+
+  .layout-content-container {
+    padding-left: clamp(0.875rem, 3vw, 1.5rem);
+    padding-right: clamp(0.875rem, 3vw, 1.5rem);
+    padding-bottom: var(--mobile-bottom-nav-offset) !important;
+  }
+
+  .layout-content-container > .min-h-screen {
+    min-height: calc(100dvh - var(--header-offset, 56px));
+    padding-bottom: var(--mobile-bottom-nav-offset);
+  }
+
+  .container {
+    max-width: 100%;
+  }
+
+  header {
+    max-width: calc(100vw - 1rem);
+  }
+
+  header h2,
+  header a,
+  header button {
+    min-width: 0;
+  }
+
+  .glass-card,
+  .glass-modal,
+  .mobile-card,
+  .subscription-dashboard,
+  .calendar-modal {
+    max-width: 100%;
+  }
+
+  .glass-card,
+  .mobile-card {
+    overflow-wrap: anywhere;
+  }
+
+  .glass-modal,
+  [role="dialog"] .glass-modal {
+    width: min(100%, calc(100vw - 1.5rem)) !important;
+    max-height: calc(100dvh - 1.5rem) !important;
+    overflow: auto;
+  }
+
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+  }
+
+  button,
+  .glass-button,
+  a[class*="rounded"] {
+    max-width: 100%;
+  }
+
+  table {
+    width: 100%;
+  }
+
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media (max-width: 767px) {
+  body {
+    min-width: 0;
+  }
+
+  .layout-shell,
+  .layout-content-container,
+  main,
+  section,
+  article {
+    min-width: 0;
+  }
+
+  .layout-content-container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  header {
+    max-width: calc(100vw - 1rem);
+    min-width: 0;
+    white-space: normal !important;
+  }
+
+  header .wave-text {
+    display: inline-block;
+  }
+
+  .home-hero {
+    min-height: min(68dvh, 31rem) !important;
+    padding: 1rem !important;
+  }
+
+  .home-hero h1,
+  h1 {
+    overflow-wrap: anywhere;
+  }
+
+  .home-hero p {
+    max-width: 100%;
+  }
+
+  .glass-card:not(header):not(.home-hero),
+  .mobile-card {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .grid {
+    min-width: 0;
+  }
+
+  .grid > *,
+  .flex > * {
+    min-width: 0;
+  }
+
+  .min-w-40 {
+    min-width: 0 !important;
+  }
+
+  .glass-button {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  .fixed.inset-0 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .fixed.inset-0 > .glass-modal,
+  .fixed.inset-0 > .bg-white {
+    border-radius: 1rem !important;
+    padding: 1rem !important;
+  }
+
+  .venue-calendar-root {
+    margin-left: -0.25rem;
+    margin-right: -0.25rem;
+  }
+
+  .venue-calendar-root .rbc-toolbar {
+    justify-content: center;
+  }
+
+  .venue-calendar-root .rbc-toolbar .rbc-btn-group {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .venue-calendar-root .rbc-toolbar button {
+    flex: 0 0 auto;
+  }
+
+  .venue-calendar-root .rbc-calendar,
+  .venue-calendar-root .rbc-month-view,
+  .venue-calendar-root .rbc-time-view,
+  .venue-calendar-root .rbc-agenda-view {
+    min-width: 0;
+  }
+
+  .venue-calendar-root .rbc-agenda-view {
+    overflow-x: auto;
+  }
+
+  .venue-calendar-root .rbc-agenda-table {
+    min-width: 36rem;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    margin-left: 0.5rem !important;
+    margin-right: 0.5rem !important;
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+  }
+
+  header h2 {
+    font-size: 0.9rem !important;
+  }
+
+  .layout-content-container {
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+  }
+
+  .container {
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 12vw, 2.65rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  h2 {
+    font-size: clamp(1.5rem, 8vw, 2rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  .home-hero {
+    border-radius: 1rem !important;
+  }
+
+  .home-hero h1 {
+    font-size: clamp(2.15rem, 12vw, 3rem) !important;
+  }
+
+  .home-hero form button,
+  .home-hero button {
+    width: auto;
+    min-width: 4.75rem !important;
+  }
+
+  .backdrop-blur-xl.bg-\[rgba\(93\,101\,117\,0\.34\)\] {
+    padding: 1.25rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  .bottom-nav-label,
+  nav.fixed.bottom-0 span {
+    font-size: 0.68rem;
+  }
+
+  nav.fixed.bottom-0 a {
+    min-width: 0 !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}

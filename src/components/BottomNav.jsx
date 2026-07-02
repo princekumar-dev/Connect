@@ -86,24 +86,27 @@ function BottomNav() {
   }
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-lg safe-area-inset-bottom">
-      <div className="flex items-center justify-around px-2 py-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={`flex min-w-[60px] flex-col items-center justify-center rounded-lg px-3 py-2 transition-all duration-200 ${
-              isActive(item.path)
-                ? 'bg-blue-50 text-[#3d99f5]'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-[#3d99f5]'
-            }`}
-          >
-            {renderIcon(item.icon)}
-            <span className={`mt-1 text-xs ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>
-              {item.name}
-            </span>
-          </Link>
-        ))}
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 px-2 pb-2 safe-area-inset-bottom">
+      <div className="mx-auto max-w-[720px] rounded-t-3xl border border-white/70 bg-white/90 backdrop-blur-xl shadow-[0_-12px_36px_rgba(15,23,42,0.12)] px-2 py-2">
+        <div className="flex items-center justify-around gap-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex min-w-[60px] flex-col items-center justify-center rounded-2xl px-2 py-2 transition-all duration-200 ${
+                isActive(item.path)
+                  ? 'bg-blue-50 text-[#2563eb] shadow-sm ring-1 ring-blue-100'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-[#2563eb]'
+              }`}
+              aria-label={item.name}
+            >
+              {renderIcon(item.icon)}
+              <span className={`mt-1 text-[11px] leading-none ${isActive(item.path) ? 'font-bold' : 'font-medium'}`}>
+                {item.name}
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   )

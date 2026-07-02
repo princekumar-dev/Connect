@@ -80,10 +80,13 @@ const BookingSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 })
 
+BookingSchema.index({ venue: 1, date: 1, status: 1 })
+BookingSchema.index({ email: 1, createdAt: -1 })
+
 // Generate booking ID before saving
 BookingSchema.pre('save', function(next) {
   if (!this.bookingId) {
-    this.bookingId = 'BK' + Date.now() + Math.random().toString(36).substr(2, 4).toUpperCase()
+    this.bookingId = 'BK' + Date.now() + Math.random().toString(36).substring(2, 6).toUpperCase()
   }
   this.updatedAt = new Date()
   next()

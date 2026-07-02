@@ -42,10 +42,11 @@ function Bookings() {
       try {
         const parsedAuth = JSON.parse(authData)
         // Only actual admins can access this page, not principal/secretary
-        if (parsedAuth.email && (parsedAuth.role === 'admin' || parsedAuth.email === 'admin@msec.edu.in')) {
-          setUserEmail(parsedAuth.email)
+        if (parsedAuth.email && (parsedAuth.role === 'admin' || parsedAuth.role === 'principal' || parsedAuth.role === 'secretary' || parsedAuth.email === 'admin@msec.edu.in')) {
+          const email = parsedAuth.email
+          setUserEmail(email)
           setIsAdmin(true)
-          fetchAllBookings() // Admin gets ALL bookings
+          fetchAllBookings(email)
           return
         } else {
           // Not admin, redirect to booking status (their own bookings)
@@ -61,7 +62,7 @@ function Bookings() {
             const email = localStorage.getItem('userEmail')
             setUserEmail(email || '')
             setIsAdmin(true)
-            fetchAllBookings()
+            fetchAllBookings(email || '')
             return
           } else {
             navigate('/booking-status')
@@ -77,7 +78,7 @@ function Bookings() {
         const email = localStorage.getItem('userEmail')
         setUserEmail(email || '')
         setIsAdmin(true)
-        fetchAllBookings()
+        fetchAllBookings(email || '')
         return
       } else {
         navigate('/booking-status')
@@ -118,13 +119,13 @@ function Bookings() {
     }
   }, [userEmail])
 
-  const fetchAllBookings = async () => {
+  const fetchAllBookings = async (emailOverride = userEmail) => {
     try {
       const response = await fetch('/api/bookings', {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
-          'userEmail': userEmail,
+          'userEmail': emailOverride,
           'isAdmin': 'true' // This tells the API to return ALL bookings
         }
       })
@@ -187,7 +188,13 @@ function Bookings() {
         ))
         setLastUpdated(new Date())
         setIsConnected(true)
-  setToast({ isOpen: true, message: `Booking ${newStatus} successfully!`, type: 'success' })
+        let movedMessage = ''
+        if (data.reassignment && data.reassignment.action === 'reassigned') {
+          movedMessage = ` Previous booking moved to ${data.reassignment.newVenue}.`
+        } else if (data.reassignment && data.reassignment.action === 'cancelled') {
+          movedMessage = ' Previous booking was cancelled because no suitable venue was available.'
+        }
+        setToast({ isOpen: true, message: `Booking ${newStatus} successfully!${movedMessage}`, type: 'success' })
   // trigger immediate browser notification + cross-tab updates
   try { showNotification(`Booking ${newStatus}`, { body: `Booking ${bookingId} was ${newStatus}` }) } catch (e) {}
         // notify other tabs/pages that bookings updated
@@ -288,7 +295,9 @@ function Bookings() {
   })
 
   const getBookingStatus = (booking) => {
-    const isPast = new Date(booking.date) < new Date()
+    const dateStr = new Date(booking.date).toISOString().slice(0, 10)
+    const bookingDateTime = new Date(dateStr + 'T' + (booking.time || '00:00'))
+    const isPast = bookingDateTime < new Date()
     
     if (booking.status === 'pending') {
       return { 
@@ -350,14 +359,15 @@ function Bookings() {
       <style>
         {`
           .booking-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.92) 0%, rgba(248,250,252,0.96) 100%);
+            border: 1px solid rgba(226,232,240,0.9);
             transition: all 0.3s ease;
+            box-shadow: 0 8px 28px rgba(15,23,42,0.06);
           }
           
           .booking-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 16px 36px rgba(15,23,42,0.1);
           }
           
           .loading-spinner {
@@ -380,20 +390,24 @@ function Bookings() {
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-2">
-                  All Bookings
-                </h1>
-                <p className="text-gray-600">
-                  Manage and monitor all venue booking requests
-                </p>
-              </div>
+            <div className="rounded-3xl border border-white/70 bg-white/80 backdrop-blur-xl shadow-[0_18px_50px_rgba(15,23,42,0.08)] p-5 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-blue-700 mb-3">
+                    Admin dashboard
+                  </div>
+                  <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-2">
+                    All Bookings
+                  </h1>
+                  <p className="text-gray-600 max-w-2xl">
+                    Manage and monitor all venue booking requests with live status, priority handling, and fast approvals.
+                  </p>
+                </div>
               
               {/* Connection Status & Refresh */}
               <div className={`flex items-center gap-3 ${isAdmin ? 'sm:gap-3' : ''} ${isAdmin ? 'w-full sm:w-auto' : ''}`}>
                 {isConnected === false && (
-                  <div className="flex items-center gap-2 text-red-600">
+                  <div className="flex items-center gap-2 rounded-full bg-red-50 px-3 py-2 text-red-700 border border-red-100">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                     </svg>
@@ -401,7 +415,7 @@ function Bookings() {
                   </div>
                 )}
                 {isConnected === true && (
-                  <div className="flex items-center gap-2 text-green-600">
+                  <div className="flex items-center gap-2 rounded-full bg-green-50 px-3 py-2 text-green-700 border border-green-100">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
@@ -409,7 +423,7 @@ function Bookings() {
                   </div>
                 )}
                 {isConnected === null && (
-                  <div className="flex items-center gap-2 text-yellow-600">
+                  <div className="flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-2 text-yellow-700 border border-yellow-100">
                     <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -422,18 +436,19 @@ function Bookings() {
               </div>
             </div>
           </div>
+        </div>
 
           {/* Filter Buttons */}
           <div className="mb-6">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 rounded-2xl border border-white/60 bg-white/75 backdrop-blur-lg p-2 shadow-sm">
               {['all', 'pending', 'approved', 'rejected'].map((status) => (
                 <button
                   key={status}
                   onClick={() => setFilter(status)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-xl font-semibold transition-all ${
                     filter === status
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                      : 'bg-white/80 text-gray-700 hover:bg-white border border-gray-200'
                   }`}
                 >
                   {status === 'all' ? 'All Bookings' : status === 'rejected' ? 'Rejected / Cancelled' : status.charAt(0).toUpperCase() + status.slice(1)}
@@ -455,24 +470,24 @@ function Bookings() {
                 {bookings.length > 0 && (
                   <>
                     {/* Status Statistics */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 p-4 mb-4">
-                      <div className="bg-blue-50 p-3 sm:p-4 rounded-lg text-center shadow-sm border-l-4 border-blue-500">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 p-4 mb-4 rounded-3xl border border-white/60 bg-white/75 backdrop-blur-lg shadow-sm">
+                      <div className="bg-blue-50 p-3 sm:p-4 rounded-2xl text-center shadow-sm border border-blue-100">
                         <div className="text-xl sm:text-2xl font-bold text-blue-600 mb-1">{bookings.length}</div>
                         <div className="text-[10px] sm:text-xs text-blue-800 font-medium">Total Bookings</div>
                       </div>
-                      <div className="bg-yellow-50 p-3 sm:p-4 rounded-lg text-center shadow-sm border-l-4 border-yellow-500">
+                      <div className="bg-yellow-50 p-3 sm:p-4 rounded-2xl text-center shadow-sm border border-yellow-100">
                         <div className="text-xl sm:text-2xl font-bold text-yellow-600 mb-1">
                           {bookings.filter(b => b.status === 'pending').length}
                         </div>
                         <div className="text-[10px] sm:text-xs text-yellow-800 font-medium">⏳ Pending</div>
                       </div>
-                      <div className="bg-green-50 p-3 sm:p-4 rounded-lg text-center shadow-sm border-l-4 border-green-500">
+                      <div className="bg-green-50 p-3 sm:p-4 rounded-2xl text-center shadow-sm border border-green-100">
                         <div className="text-xl sm:text-2xl font-bold text-green-600 mb-1">
                           {bookings.filter(b => b.status === 'approved').length}
                         </div>
                         <div className="text-[10px] sm:text-xs text-green-800 font-medium">✅ Approved</div>
                       </div>
-                      <div className="bg-red-50 p-3 sm:p-4 rounded-lg text-center shadow-sm border-l-4 border-red-500">
+                      <div className="bg-red-50 p-3 sm:p-4 rounded-2xl text-center shadow-sm border border-red-100">
                         <div className="text-xl sm:text-2xl font-bold text-red-600 mb-1">
                           {bookings.filter(b => b.status === 'rejected' || b.status === 'cancelled').length}
                         </div>
@@ -481,26 +496,26 @@ function Bookings() {
                     </div>
 
                     {/* Role Distribution */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-4 mb-4">
-                      <div className="bg-purple-50 p-3 rounded-lg text-center shadow-sm">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 p-4 mb-4 rounded-3xl border border-white/60 bg-white/75 backdrop-blur-lg shadow-sm">
+                      <div className="bg-purple-50 p-3 rounded-2xl text-center shadow-sm border border-purple-100">
                         <div className="text-xl font-bold text-purple-600 mb-1">
                           {bookings.filter(b => (b.userRole || '').toLowerCase() === 'admin').length}
                         </div>
                         <div className="text-xs text-purple-800 font-medium">Admin</div>
                       </div>
-                      <div className="bg-indigo-50 p-3 rounded-lg text-center shadow-sm">
+                      <div className="bg-indigo-50 p-3 rounded-2xl text-center shadow-sm border border-indigo-100">
                         <div className="text-xl font-bold text-indigo-600 mb-1">
                           {bookings.filter(b => (b.userRole || '').toLowerCase() === 'principal').length}
                         </div>
                         <div className="text-xs text-indigo-800 font-medium">Principal</div>
                       </div>
-                      <div className="bg-cyan-50 p-3 rounded-lg text-center shadow-sm">
+                      <div className="bg-cyan-50 p-3 rounded-2xl text-center shadow-sm border border-cyan-100">
                         <div className="text-xl font-bold text-cyan-600 mb-1">
                           {bookings.filter(b => (b.userRole || '').toLowerCase() === 'secretary').length}
                         </div>
                         <div className="text-xs text-cyan-800 font-medium">Secretary</div>
                       </div>
-                      <div className="bg-teal-50 p-3 rounded-lg text-center shadow-sm">
+                      <div className="bg-teal-50 p-3 rounded-2xl text-center shadow-sm border border-teal-100">
                         <div className="text-xl font-bold text-teal-600 mb-1">
                           {bookings.filter(b => {
                             const r = (b.userRole || 'staff').toLowerCase()
@@ -516,7 +531,7 @@ function Bookings() {
                 {/* Bookings List */}
                 <div className="space-y-4">
                   {filteredBookings.length === 0 ? (
-                    <div className="glass-card no-mobile-backdrop p-12 text-center">
+                    <div className="glass-card no-mobile-backdrop p-12 text-center rounded-3xl border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
                       <div className="text-6xl mb-4">📅</div>
                       <h3 className="text-xl font-bold text-gray-700 mb-2">
                         {filter === 'all' 
@@ -540,12 +555,12 @@ function Bookings() {
                       )}
                     </div>
                   ) : (
-            filteredBookings.map((booking, index) => {
-              const status = getBookingStatus(booking)
-              const isUpdating = updatingIds.has(booking._id)
+                    filteredBookings.map((booking, index) => {
+                      const status = getBookingStatus(booking)
+                      const isUpdating = updatingIds.has(booking._id)
                       
                       return (
-                        <div key={booking._id || index} className="booking-card rounded-lg p-4 sm:p-6">
+                        <div key={booking._id || index} className="booking-card rounded-2xl p-4 sm:p-6">
                           {/* Mobile status badge - top right */}
                           <div className="flex justify-between items-start mb-2 sm:hidden">
                             <h3 className="text-lg font-bold text-[#111418] break-words flex-1">
@@ -593,7 +608,7 @@ function Bookings() {
                                       onClick={() => updateBookingStatus(booking._id, 'approved')}
                                       disabled={isUpdating || booking.status === 'approved'}
                                       aria-disabled={isUpdating || booking.status === 'approved'}
-                                      className={`px-3 py-1 text-white text-sm rounded font-medium transition-all flex items-center gap-2 ${isUpdating || booking.status === 'approved' ? 'bg-green-400 opacity-80 cursor-not-allowed ring-0' : 'bg-green-600 hover:bg-green-700 shadow-sm ring-1 ring-green-300'}`}
+                                      className={`px-3 py-1 text-white text-sm rounded-xl font-medium transition-all flex items-center gap-2 ${isUpdating || booking.status === 'approved' ? 'bg-green-400 opacity-80 cursor-not-allowed ring-0' : 'bg-green-600 hover:bg-green-700 shadow-sm ring-1 ring-green-300'}`}
                                     >
                                       <span>Approve</span>
                                     </button>
@@ -601,7 +616,7 @@ function Bookings() {
                                       onClick={() => updateBookingStatus(booking._id, 'rejected')}
                                       disabled={isUpdating || booking.status === 'rejected'}
                                       aria-disabled={isUpdating || booking.status === 'rejected'}
-                                      className={`px-3 py-1 text-white text-sm rounded font-medium transition-all flex items-center gap-2 ${isUpdating || booking.status === 'rejected' ? 'bg-red-400 opacity-80 cursor-not-allowed ring-0' : 'bg-red-600 hover:bg-red-700 shadow-sm ring-1 ring-red-300'}`}
+                                      className={`px-3 py-1 text-white text-sm rounded-xl font-medium transition-all flex items-center gap-2 ${isUpdating || booking.status === 'rejected' ? 'bg-red-400 opacity-80 cursor-not-allowed ring-0' : 'bg-red-600 hover:bg-red-700 shadow-sm ring-1 ring-red-300'}`}
                                     >
                                       <span>Reject</span>
                                     </button>
@@ -609,7 +624,7 @@ function Bookings() {
                                 )}
                                 <button
                                   onClick={() => handleDeleteClick(booking._id)}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
                                   title="Delete booking"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

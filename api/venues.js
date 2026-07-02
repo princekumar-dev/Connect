@@ -94,6 +94,34 @@ function getVenueStatus(bookings, venueName) {
   return { status: 'available', message: 'Available for booking' }
 }
 
+async function getVenueRecommendations(attendees) {
+  const requestedAttendees = Number(attendees) || 0
+  if (requestedAttendees < 1) {
+    return null
+  }
+
+  const bookings = await Booking.find({ status: 'approved' }).lean()
+  const recommendations = Object.entries(VENUE_CAPACITIES || {})
+    .map(([venue, capacity]) => {
+      const venueStatus = getVenueStatus(bookings, venue)
+      return {
+        venue,
+        capacity,
+        suitable: capacity >= requestedAttendees,
+        available: venueStatus.status === 'available',
+        status: venueStatus.status,
+        statusMessage: venueStatus.message
+      }
+    })
+    .sort((a, b) => {
+      if (a.suitable !== b.suitable) return a.suitable ? -1 : 1
+      if (a.available !== b.available) return a.available ? -1 : 1
+      return a.capacity - b.capacity
+    })
+
+  return recommendations
+}
+
 export default async function handler(req, res) {
   // CORS is already handled by the cors middleware in server.js
   
@@ -104,6 +132,22 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       await connectToDatabase()
+
+      if (req.params?.attendees !== undefined) {
+        const recommendations = await getVenueRecommendations(req.params.attendees)
+        if (!recommendations) {
+          return res.status(400).json({
+            success: false,
+            error: 'Attendees must be a positive number'
+          })
+        }
+
+        return res.status(200).json({
+          success: true,
+          venues: recommendations,
+          count: recommendations.length
+        })
+      }
       
       // Fetch all approved bookings
       const bookings = await Booking.find({ status: 'approved' }).lean()

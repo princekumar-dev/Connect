@@ -64,6 +64,7 @@ app.all('/api/users', usersHandler);
 app.all('/api/events/bulk', eventsBulkHandler);
 app.all('/api/events', eventsHandler);
 app.all('/api/venues', venuesHandler);
+app.get('/api/venues/recommend/:attendees', venuesHandler);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/subscription-check', subscriptionCheckRouter);
 

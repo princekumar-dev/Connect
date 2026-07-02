@@ -36,8 +36,8 @@ function BookingStatus() {
           return
         }
         setUserEmail(authData.email)
-        // Only actual admin role gets admin privileges, not principal/secretary (case-insensitive)
-        setIsAdmin(authData.role?.toLowerCase() === 'admin' || authData.email === 'admin@msec.edu.in')
+        const role = authData.role?.toLowerCase()
+        setIsAdmin(['admin', 'principal', 'secretary'].includes(role) || authData.email === 'admin@msec.edu.in')
       } catch (error) {
         navigate('/login')
         return
@@ -45,8 +45,7 @@ function BookingStatus() {
     } else if (isLoggedIn === 'true' && userEmailFromStorage) {
       // Fallback to old auth system
       setUserEmail(userEmailFromStorage)
-      // Only actual admin role gets admin privileges (case-insensitive)
-      setIsAdmin(userRole?.toLowerCase() === 'admin' || userEmailFromStorage === 'admin@msec.edu.in')
+      setIsAdmin(['admin', 'principal', 'secretary'].includes(userRole?.toLowerCase()) || userEmailFromStorage === 'admin@msec.edu.in')
     } else {
       navigate('/login')
       return
@@ -168,8 +167,7 @@ function BookingStatus() {
   }
 
   const showNotification = (message, type = 'success') => {
-    // Simple notification - you can enhance this with a proper notification system
-    console.log(`${type.toUpperCase()}: ${message}`)
+    setToast({ isOpen: true, message, type: type === 'error' ? 'error' : 'success' })
   }
 
   const updateBookingStatus = async (bookingId, newStatus) => {
@@ -180,7 +178,9 @@ function BookingStatus() {
       const response = await fetch('/api/bookings', {
         method: 'PUT',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'userEmail': userEmail,
+          'isAdmin': 'true'
         },
         body: JSON.stringify({ bookingId, status: newStatus })
       })
@@ -195,7 +195,13 @@ function BookingStatus() {
               : booking
           )
         )
-        showNotification(`Booking ${newStatus} successfully!`, 'success')
+        let movedMessage = ''
+        if (data.reassignment && data.reassignment.action === 'reassigned') {
+          movedMessage = ` Previous booking moved to ${data.reassignment.newVenue}.`
+        } else if (data.reassignment && data.reassignment.action === 'cancelled') {
+          movedMessage = ' Previous booking was cancelled because no suitable venue was available.'
+        }
+        showNotification(`Booking ${newStatus} successfully!${movedMessage}`, 'success')
         // notify other parts of the app and other tabs
         try {
           const stamp = Date.now().toString()
@@ -302,7 +308,8 @@ function BookingStatus() {
   }
 
   const getBookingStatus = (booking) => {
-    const bookingDateTime = new Date(booking.date + 'T' + (booking.time || '00:00'))
+    const dateStr = new Date(booking.date).toISOString().slice(0, 10)
+    const bookingDateTime = new Date(dateStr + 'T' + (booking.time || '00:00'))
     const now = new Date()
     const isUpcoming = bookingDateTime > now
     const isPast = bookingDateTime < now
@@ -386,14 +393,15 @@ function BookingStatus() {
       <style>
         {`
           .booking-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.94) 0%, rgba(248,250,252,0.96) 100%);
+            border: 1px solid rgba(226,232,240,0.9);
             transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(15,23,42,0.06);
           }
           
           .booking-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 16px 36px rgba(15,23,42,0.1);
           }
           
           .loading-spinner {
@@ -416,7 +424,7 @@ function BookingStatus() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="max-w-6xl mx-auto">
             {/* Header */}
-            <div className="glass-card no-mobile-backdrop relative p-8 mb-8 rounded-3xl shadow-2xl mobile-smoothest-scroll">
+            <div className="glass-card no-mobile-backdrop relative p-6 sm:p-8 mb-8 rounded-3xl border border-white/70 bg-white/80 shadow-[0_18px_50px_rgba(15,23,42,0.08)] mobile-smoothest-scroll">
               <div className="text-center mb-6">
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 mb-4">
                   {isAdmin ? 'All Bookings Management' : 'My Booking Status'}
@@ -443,9 +451,9 @@ function BookingStatus() {
                 )}
               </div>
               
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 rounded-full bg-white/70 border border-white/80 px-3 py-2 shadow-sm">
                       <div className={`w-2 h-2 rounded-full ${
                         isConnected === null ? 'bg-yellow-500 animate-pulse' : 
                         isConnected ? 'bg-green-500' : 'bg-red-500'
@@ -461,7 +469,7 @@ function BookingStatus() {
                   <button 
                     onClick={refreshBookings}
                     disabled={loading}
-                    className="glass-button flex items-center gap-2 px-4 py-2 text-[#3d99f5] rounded-lg text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                    className="glass-button flex items-center gap-2 px-4 py-2 text-[#3d99f5] rounded-2xl text-sm font-semibold transition-all disabled:opacity-60 disabled:cursor-not-allowed bg-white/80 border border-white/70 shadow-sm hover:shadow-md"
                   >
                     <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -496,7 +504,7 @@ function BookingStatus() {
 
             {/* No Bookings Message */}
             {!loading && !error && bookings.length === 0 && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+              <div className="bg-white/80 border border-yellow-100 rounded-3xl p-6 text-center shadow-sm">
                 <div className="mb-4">
                   <svg className="mx-auto h-12 w-12 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 48 48">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m6 0h6m-6 0v6m0-6V6a3 3 0 013-3h6a3 3 0 013 3v6m0 0v6m0-6h6m-6 0H9m12 6v6m0-6h6m-6 0H9"></path>
@@ -534,7 +542,7 @@ function BookingStatus() {
                                   🔄 Venue Switched
                                 </span>
                               </div>
-                              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded">
+                              <div className="bg-blue-50 border border-blue-100 p-3 rounded-2xl shadow-sm">
                                 <p className="text-sm text-blue-800 font-medium">
                                   📍 Original Venue: <span className="line-through">{booking.originalVenue}</span>
                                 </p>
@@ -675,7 +683,7 @@ function BookingStatus() {
                               setSelectedBooking(booking)
                               setShowExportModal(true)
                             }}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium rounded-lg transition-colors"
+                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold rounded-2xl transition-colors"
                             title="Export to Calendar"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

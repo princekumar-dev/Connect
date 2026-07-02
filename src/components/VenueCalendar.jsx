@@ -5,6 +5,32 @@ import 'react-big-calendar/lib/css/react-big-calendar.css'
 
 const localizer = momentLocalizer(moment)
 
+/** Mobile-optimized event chip — shows only time range and status dot. */
+function MobileEventChip({ event }) {
+  const resource = event?.resource || {}
+  const status = String(resource.status || '').toLowerCase()
+  const isCurrentUser = !!resource.isCurrentUser
+
+  let dotColor = '#f59e0b'
+  if (status === 'pending' && isCurrentUser) dotColor = '#8b5cf6'
+  else if ((status === 'approved' || status === 'confirmed') && isCurrentUser) dotColor = '#10b981'
+  else if (status === 'pending') dotColor = '#94a3b8'
+
+  const timeStr = event?.start
+    ? moment(event.start).format('h:mm A')
+    : ''
+
+  return (
+    <span className="flex items-center gap-1 overflow-hidden">
+      <span
+        className="inline-block w-[5px] h-[5px] rounded-full flex-shrink-0"
+        style={{ backgroundColor: dotColor }}
+      />
+      <span className="truncate text-[0.68rem] leading-tight font-medium">{timeStr}</span>
+    </span>
+  )
+}
+
 /** Normalize API/Mongo date to a local calendar day (avoids UTC day-shift bugs). */
 function parseBookingDateOnly(value) {
   if (value == null || value === '') return null
@@ -37,20 +63,39 @@ function buildEndDate(start, duration) {
 
 function formatEventTitle(booking, start, end) {
   const range = `${moment(start).format('h:mm A')}–${moment(end).format('h:mm A')}`
-  const org = booking.organizer || 'Booking'
+  const org = booking.organizer || ''
   const status = String(booking.status || '').toLowerCase()
   const isCurrentUser = !!booking.isCurrentUser
 
   if (status === 'pending' && isCurrentUser) {
-    return `${range} · ${org} (Your request — pending)`
+    return `${range} · ${org} (Pending)`
   }
   if ((status === 'approved' || status === 'confirmed') && isCurrentUser) {
     return `${range} · ${org} (You)`
   }
   if (status === 'approved' || status === 'confirmed') {
-    return `${range} · ${org} (Booked)`
+    return `${range} · ${org}`
   }
-  return `${range} · ${org}`
+  return `${range} · ${org || 'Booking'}`
+}
+
+/** Return start-of-today for comparison. */
+function getStartOfToday() {
+  const now = new Date()
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate())
+}
+
+/** Check if a date is strictly before today (i.e. in the past). */
+function isPastDate(date) {
+  const d = date instanceof Date ? date : new Date(date)
+  if (Number.isNaN(d.getTime())) return false
+  return d < getStartOfToday()
+}
+
+/** Check if a datetime is in the past (for week/day slot blocking). */
+function isPastSlot(slotDate) {
+  const now = new Date()
+  return slotDate.getTime() < now.getTime()
 }
 
 function VenueCalendar({ venueName, onDateSelect }) {
@@ -82,6 +127,16 @@ function VenueCalendar({ venueName, onDateSelect }) {
   }, [isMobile, currentView])
 
   const scrollToTime = useMemo(() => new Date(1970, 0, 1, 8, 0, 0), [])
+  const viewLabel = useMemo(() => {
+    if (currentView === 'month') return 'Month view'
+    if (currentView === 'week') return 'Week view'
+    if (currentView === 'day') return 'Day view'
+    return currentView
+  }, [currentView])
+
+  const currentMonthLabel = useMemo(() => {
+    return currentDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+  }, [currentDate])
 
   const formats = useMemo(
     () => ({
@@ -195,6 +250,7 @@ function VenueCalendar({ venueName, onDateSelect }) {
       const d = date instanceof Date ? date : new Date(date)
       if (Number.isNaN(d.getTime())) return {}
 
+      // Sunday — closed
       if (d.getDay() === 0) {
         return {
           className: 'calendar-sunday-cannot-book venue-cal-sunday',
@@ -202,6 +258,28 @@ function VenueCalendar({ venueName, onDateSelect }) {
         }
       }
 
+      // Past dates — grayed out, not clickable (all views)
+      if (isPastDate(d)) {
+        return {
+          className: 'calendar-day-past',
+          style: { cursor: 'not-allowed' }
+        }
+      }
+
+      // Today — enhanced highlight (month view only; week/day uses rbc-header.rbc-today)
+      const today = getStartOfToday()
+      const isToday = d.getFullYear() === today.getFullYear() &&
+                      d.getMonth() === today.getMonth() &&
+                      d.getDate() === today.getDate()
+
+      if (isToday && currentView === 'month') {
+        return {
+          className: 'calendar-day-today',
+          style: {}
+        }
+      }
+
+      // Only apply booking status colors in month view
       if (currentView !== 'month') {
         return { className: '', style: {} }
       }
@@ -255,9 +333,17 @@ function VenueCalendar({ venueName, onDateSelect }) {
   const slotPropGetter = useCallback((date) => {
     const d = date instanceof Date ? date : new Date(date)
     if (Number.isNaN(d.getTime())) return {}
+    // Sunday — closed
     if (d.getDay() === 0) {
       return {
         className: 'venue-cal-slot-sunday',
+        style: { cursor: 'not-allowed' }
+      }
+    }
+    // Past time slots — blocked
+    if (isPastSlot(d)) {
+      return {
+        className: 'venue-cal-slot-past',
         style: { cursor: 'not-allowed' }
       }
     }
@@ -268,40 +354,39 @@ function VenueCalendar({ venueName, onDateSelect }) {
     const status = String(event.resource?.status || '').toLowerCase()
     const isCurrentUser = event.resource?.isCurrentUser
 
-    let backgroundColor = '#f59e0b'
-    let borderColor = '#d97706'
-    let color = '#ffffff'
+    let backgroundColor = 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)'
+    let boxShadow = '0 2px 8px rgba(245,158,11,0.25)'
 
     if (status === 'pending' && isCurrentUser) {
-      backgroundColor = '#fde68a'
-      borderColor = '#d97706'
-      color = '#422006'
+      backgroundColor = 'linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)'
+      boxShadow = '0 2px 8px rgba(139,92,246,0.25)'
     } else if ((status === 'approved' || status === 'confirmed') && isCurrentUser) {
-      backgroundColor = '#10b981'
-      borderColor = '#059669'
+      backgroundColor = 'linear-gradient(135deg, #34d399 0%, #10b981 100%)'
+      boxShadow = '0 2px 8px rgba(16,185,129,0.25)'
     } else if (status === 'pending') {
-      backgroundColor = '#94a3b8'
-      borderColor = '#64748b'
+      backgroundColor = 'linear-gradient(135deg, #94a3b8 0%, #64748b 100%)'
+      boxShadow = '0 2px 8px rgba(100,116,139,0.2)'
     }
 
     return {
       style: {
         backgroundColor,
-        borderColor,
-        borderRadius: '6px',
-        color,
-        border: `2px solid ${borderColor}`,
-        display: 'block',
+        color: '#ffffff',
         fontWeight: 600,
-        fontSize: '12px',
-        opacity: 0.95,
-        boxShadow: `0 2px 8px ${borderColor}40`
+        boxShadow
       }
     }
   }, [])
 
   const handleSelectSlot = ({ start }) => {
+    // Block Sundays
     if (start.getDay() === 0) return
+    // Block past dates
+    if (isPastDate(start)) return
+    // Block past time slots in week/day view
+    if (currentView === 'week' || currentView === 'day') {
+      if (isPastSlot(start)) return
+    }
 
     const dayKey = formatDateKeyFromDate(start)
     const hasAnyBookingOnDay = dayBookingStatusMap.has(dayKey)
@@ -320,6 +405,7 @@ function VenueCalendar({ venueName, onDateSelect }) {
 
   const handleSelectEvent = (event) => {
     if (!event?.start) return
+    if (isPastDate(event.start)) return
     setCurrentDate(event.start)
     setCurrentView('day')
   }
@@ -327,6 +413,7 @@ function VenueCalendar({ venueName, onDateSelect }) {
   const handleDrillDown = (date) => {
     const d = date instanceof Date ? date : new Date(date)
     if (Number.isNaN(d.getTime()) || d.getDay() === 0) return
+    if (isPastDate(d)) return
 
     const dayKey = formatDateKeyFromDate(d)
     const hasAnyBookingOnDay = dayBookingStatusMap.has(dayKey)
@@ -378,100 +465,55 @@ function VenueCalendar({ venueName, onDateSelect }) {
 
   return (
     <div className="venue-calendar-root w-full">
-      <style>{`
-        @media (max-width: 640px) {
-          .venue-calendar-root .rbc-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-          }
-
-          .venue-calendar-root .rbc-toolbar .rbc-toolbar-label {
-            order: 1;
-            flex: 1 1 100%;
-            text-align: left;
-            font-size: 1.05rem;
-            font-weight: 700;
-            padding: 0;
-            margin: 0;
-          }
-
-          .venue-calendar-root .rbc-toolbar .rbc-btn-group {
-            display: inline-flex;
-            flex-wrap: nowrap;
-          }
-
-          .venue-calendar-root .rbc-toolbar .rbc-btn-group:first-child {
-            order: 2;
-          }
-
-          .venue-calendar-root .rbc-toolbar .rbc-btn-group:last-child {
-            order: 3;
-          }
-
-          .venue-calendar-root .rbc-toolbar button {
-            font-size: 0.9rem;
-            padding: 0.38rem 0.62rem;
-            min-height: 34px;
-            line-height: 1.1;
-          }
-
-          .venue-calendar-root .rbc-header {
-            font-size: 0.9rem;
-            padding: 0.25rem 0;
-          }
-
-          .venue-calendar-root .rbc-date-cell {
-            font-size: 0.9rem;
-            padding-right: 0.25rem;
-          }
-
-          .venue-calendar-root .rbc-event {
-            font-size: 0.72rem !important;
-            padding: 1px 3px;
-            line-height: 1.15;
-          }
-
-          .venue-calendar-root .rbc-month-row {
-            min-height: 42px;
-          }
-        }
-      `}</style>
-
-      <div className="glass-card p-4 mb-4">
-        <h3 className="text-lg font-semibold mb-3 text-gray-800">Booking status legend</h3>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-white border-2 border-gray-300" />
-            <span className="text-gray-700">Free</span>
+      <div className="rounded-2xl overflow-hidden shadow-lg border border-white/40 bg-white/70 backdrop-blur-xl">
+        <div className="cal-calendar-header">
+          <div>
+            <p className="cal-calendar-eyebrow">Availability planner</p>
+            <h3 className="cal-calendar-title">{venueName}</h3>
+            <p className="cal-calendar-subtitle">
+              {viewLabel} · {currentMonthLabel}
+            </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#10b981', border: '2px solid #059669' }} />
-            <span className="text-gray-700">Your booking</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#fde68a', border: '2px solid #d97706' }} />
-            <span className="text-gray-700">Your pending</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#f59e0b', border: '2px solid #d97706' }} />
-            <span className="text-gray-700">Others booked</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444', border: '2px solid #dc2626' }} />
-            <span className="text-gray-700">Busy day (3+)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-gray-300 border-2 border-gray-400" />
-            <span className="text-gray-700">Sunday (closed)</span>
+          <div className="cal-calendar-note">
+            <span className="cal-calendar-note-dot" />
+            <span>Select a free date to continue booking</span>
           </div>
         </div>
-      </div>
 
-      <div className="glass-card p-4">
-        <div className="h-96 w-full">
+        {/* Compact inline legend */}
+        <div className="cal-mini-legend">
+          <span className="cal-legend-item">
+            <span className="cal-legend-dot cal-legend-dot--free" />
+            <span className="hidden sm:inline">Free</span>
+          </span>
+          <span className="cal-legend-item">
+            <span className="cal-legend-dot cal-legend-dot--mine" />
+            <span className="hidden sm:inline">Your booking</span>
+          </span>
+          <span className="cal-legend-item">
+            <span className="cal-legend-dot cal-legend-dot--pending" />
+            <span className="hidden sm:inline">Your pending</span>
+          </span>
+          <span className="cal-legend-item">
+            <span className="cal-legend-dot cal-legend-dot--others" />
+            <span className="hidden sm:inline">Others booked</span>
+          </span>
+          <span className="cal-legend-item">
+            <span className="cal-legend-dot cal-legend-dot--busy" />
+            <span className="hidden sm:inline">Busy (3+)</span>
+          </span>
+          <span className="cal-legend-item">
+            <span className="cal-legend-dot cal-legend-dot--past" />
+            <span className="hidden sm:inline">Past</span>
+          </span>
+          <span className="cal-legend-item">
+            <span className="cal-legend-dot cal-legend-dot--closed" />
+            <span className="hidden sm:inline">Closed</span>
+          </span>
+        </div>
+
+        {/* Calendar */}
+        <div className="h-[480px] sm:h-[460px] w-full">
           <Calendar
             localizer={localizer}
             events={bookings}
@@ -483,6 +525,7 @@ function VenueCalendar({ venueName, onDateSelect }) {
             selectable
             popup
             showMultiDayTimes
+            dayLayoutAlgorithm={isMobile ? 'no-overlap' : 'overlap'}
             dayPropGetter={dayPropGetter}
             slotPropGetter={slotPropGetter}
             eventPropGetter={eventPropGetter}
@@ -496,11 +539,12 @@ function VenueCalendar({ venueName, onDateSelect }) {
             drilldownView="day"
             onDrillDown={handleDrillDown}
             step={30}
-            timeslots={2}
+            timeslots={isMobile ? 4 : 2}
             min={new Date(1970, 0, 1, 8, 0, 0)}
             max={new Date(1970, 0, 1, 20, 0, 0)}
             scrollToTime={scrollToTime}
             longPressThreshold={280}
+            {...(isMobile ? { components: { event: MobileEventChip } } : {})}
           />
         </div>
       </div>

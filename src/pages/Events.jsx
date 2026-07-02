@@ -73,17 +73,17 @@ function Events() {
   // Function to get default image based on event type
   const getDefaultEventImage = (eventType) => {
     const imageMap = {
-      'Workshop': '/images/Workshop.jpeg',
-      'Seminar': '/images/seminar.jpeg',
-      'Conference': '/images/Conference.jpeg',
-      'Alumni Talk': '/images/alumni-talk.jpeg',
-      'Meeting': '/images/meeting.jpeg',
-      'Competition': '/images/Competition.jpeg',
-      'Cultural': '/images/Cultural.jpeg',
-      'Sports': '/images/sports.jpeg',
-      'Other': '/images/others.jpeg'
+      'Workshop': '/images/Workshop.webp',
+      'Seminar': '/images/seminar.webp',
+      'Conference': '/images/Conference.webp',
+      'Alumni Talk': '/images/alumni-talk.webp',
+      'Meeting': '/images/meeting.webp',
+      'Competition': '/images/Competition.webp',
+      'Cultural': '/images/Cultural.webp',
+      'Sports': '/images/sports.webp',
+      'Other': '/images/others.webp'
     }
-    return imageMap[eventType] || '/images/others.jpeg'
+    return imageMap[eventType] || '/images/others.webp'
   }
 
   useEffect(() => {

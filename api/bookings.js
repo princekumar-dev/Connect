@@ -145,7 +145,7 @@ export default async function handler(req, res) {
 
 async function getBookings(req, res) {
   try {
-    const userEmail = req.headers.useremail || req.query.userEmail
+    const userEmail = String(req.headers.useremail || req.query.userEmail || '').trim().toLowerCase()
     const isAdmin = req.headers.isadmin === 'true' || req.headers.isAdmin === 'true' || req.query.isAdmin === 'true'
     const scope = req.query.scope
 
@@ -167,8 +167,15 @@ async function getBookings(req, res) {
       })
     }
 
-    const adminEmails = ['admin@msec.edu.in']
-    const isUserAdmin = isAdmin || adminEmails.includes(userEmail)
+    const adminRoles = ['admin', 'principal', 'secretary']
+    let isUserAdmin = false
+    if (userEmail) {
+      const escapedEmail = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const adminUser = await User.findOne({ email: userEmail }) || await User.findOne({ email: new RegExp(`^${escapedEmail}$`, 'i') })
+      if (adminUser && (isAdmin || adminRoles.includes(normalizeBookingRole(adminUser.role)))) {
+        isUserAdmin = adminRoles.includes(normalizeBookingRole(adminUser.role))
+      }
+    }
 
     if (isUserAdmin) {
       const allBookings = await Booking.find().sort({ createdAt: -1 }).lean()
@@ -239,6 +246,34 @@ async function createBooking(req, res) {
       })
     }
 
+    if (!bookingData.venue || typeof bookingData.venue !== 'string' || bookingData.venue.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Venue is required.' })
+    }
+    if (bookingData.venue.length > 100) {
+      return res.status(400).json({ success: false, error: 'Venue name must be under 100 characters.' })
+    }
+
+    if (!bookingData.time || !/^\d{2}:\d{2}$/.test(bookingData.time)) {
+      return res.status(400).json({ success: false, error: 'Time must be in HH:MM format.' })
+    }
+
+    const requestedDuration = parseFloat(bookingData.duration) || 1
+    if (requestedDuration < 0.5 || requestedDuration > 8) {
+      return res.status(400).json({ success: false, error: 'Duration must be between 0.5 and 8 hours.' })
+    }
+
+    const attendees = Number(bookingData.attendees) || 0
+    if (attendees < 1 || attendees > 5000) {
+      return res.status(400).json({ success: false, error: 'Attendees must be between 1 and 5000.' })
+    }
+
+    if (bookingData.purpose && bookingData.purpose.length > 500) {
+      return res.status(400).json({ success: false, error: 'Purpose must be under 500 characters.' })
+    }
+    if (bookingData.organizer && bookingData.organizer.length > 100) {
+      return res.status(400).json({ success: false, error: 'Organizer name must be under 100 characters.' })
+    }
+
     // Sunday only holiday rule (UTC calendar day).
     if (bookingDate.getUTCDay() === 0) {
       return res.status(400).json({
@@ -246,8 +281,6 @@ async function createBooking(req, res) {
         error: 'Sunday is a holiday. Hall booking is not allowed on Sundays.'
       })
     }
-
-    const requestedDuration = parseFloat(bookingData.duration) || 1
 
     const dayEnd = new Date(bookingDate.getTime() + 86400000)
     const potentialConflicts = await Booking.find({
@@ -335,13 +368,14 @@ async function createBooking(req, res) {
       }
 
       status = 'approved'
-    } else if (['admin', 'principal', 'secretary', 'staff'].includes(role) || shouldAutoApprove) {
-      // Elevated roles and auto-approved accounts skip pending when no conflict.
+    } else if (shouldAutoApprove) {
+      // Only explicitly auto-approved accounts skip pending when no conflict.
       status = 'approved'
     }
 
+    const { bookingId: _ignored, ...cleanBookingData } = bookingData
     const booking = new Booking({
-      ...bookingData,
+      ...cleanBookingData,
       date: bookingDate,
       userRole,
       priority: requesterPriority,
@@ -416,16 +450,34 @@ async function updateBooking(req, res) {
       })
     }
 
-    const booking = await Booking.findByIdAndUpdate(
-      bookingId,
-      {
-        status,
-        updatedAt: new Date(),
-        approvalDate: status === 'approved' ? new Date() : undefined
-      },
-      { new: true }
-    )
+    const validStatuses = ['approved', 'rejected', 'cancelled', 'pending']
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+      })
+    }
 
+    const userEmail = String(req.headers.useremail || req.query.userEmail || '').trim().toLowerCase()
+    if (!userEmail) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    const adminRoles = ['admin', 'principal', 'secretary']
+    const escapedEmail = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const user = await User.findOne({ email: userEmail }) || await User.findOne({ email: new RegExp(`^${escapedEmail}$`, 'i') })
+    const userRole = user ? normalizeBookingRole(user.role) : null
+    if (!user || !adminRoles.includes(userRole)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Admin access required to update bookings'
+      })
+    }
+
+    const booking = await Booking.findById(bookingId)
     if (!booking) {
       return res.status(404).json({
         success: false,
@@ -433,15 +485,132 @@ async function updateBooking(req, res) {
       })
     }
 
+    let reassignmentInfo = null
+
+    if (status === 'approved') {
+      const bookingDate = normalizeBookingDateOnly(booking.date)
+      if (!bookingDate) {
+        return res.status(400).json({
+          success: false,
+          error: 'Booking has an invalid date and cannot be approved'
+        })
+      }
+
+      const dayEnd = new Date(bookingDate.getTime() + 86400000)
+      const approvedConflicts = await Booking.find({
+        _id: { $ne: booking._id },
+        venue: booking.venue,
+        date: { $gte: bookingDate, $lt: dayEnd },
+        status: { $in: ['approved', 'confirmed'] }
+      })
+
+      const existingBooking = pickHighestPriorityConflict(
+        approvedConflicts,
+        booking.time,
+        parseFloat(booking.duration) || 1
+      )
+
+      if (existingBooking) {
+        const approvingPriority = getRolePriority(booking.userRole || 'staff')
+        const existingRole = normalizeBookingRole(existingBooking.userRole || 'staff')
+        const existingPriority = getRolePriority(existingRole)
+        const availabilityInfo = getAvailabilityInfo(existingBooking)
+
+        if (approvingPriority <= existingPriority) {
+          return res.status(409).json({
+            success: false,
+            error: `Cannot approve this booking because ${existingBooking.venue} is already approved for ${existingBooking.organizer} (${existingRole}) at ${existingBooking.time}. It will be available again at ${availabilityInfo.nextAvailableText}.`,
+            conflict: {
+              venue: existingBooking.venue,
+              date: existingBooking.date,
+              time: existingBooking.time,
+              duration: existingBooking.duration,
+              organizer: existingBooking.organizer,
+              bookedBy: existingRole,
+              nextAvailableTime: availabilityInfo.nextAvailableText,
+              cooldownMinutes: VENUE_BOOKING_COOLDOWN_MINUTES
+            }
+          })
+        }
+
+        const originalVenue = existingBooking.originalVenue || existingBooking.venue
+        const alternativeVenue = await findAlternativeVenue(
+          existingBooking.venue,
+          existingBooking.date,
+          existingBooking.time,
+          existingBooking.attendees || booking.attendees,
+          existingBooking.duration
+        )
+
+        if (alternativeVenue) {
+          existingBooking.originalVenue = originalVenue
+          existingBooking.venue = alternativeVenue.venue
+          existingBooking.venueCapacity = alternativeVenue.capacity
+          existingBooking.movedReason = `Automatically moved to ${alternativeVenue.venue} because a higher-priority ${normalizeBookingRole(booking.userRole || 'staff')} booking was approved for ${originalVenue}.`
+          existingBooking.status = 'approved'
+          await existingBooking.save()
+
+          reassignmentInfo = {
+            id: existingBooking._id,
+            previousUser: existingBooking.organizer,
+            previousRole: existingRole,
+            previousEmail: existingBooking.email,
+            originalVenue,
+            newVenue: alternativeVenue.venue,
+            date: existingBooking.date,
+            time: existingBooking.time,
+            action: 'reassigned',
+            reason: existingBooking.movedReason
+          }
+
+          await sendBookingNotification(existingBooking, 'reassigned', {
+            originalVenue,
+            reason: existingBooking.movedReason
+          })
+        } else {
+          existingBooking.status = 'cancelled'
+          existingBooking.movedReason = `Cancelled because a higher-priority ${normalizeBookingRole(booking.userRole || 'staff')} booking was approved for ${originalVenue}, and no suitable alternative venue was available.`
+          await existingBooking.save()
+
+          reassignmentInfo = {
+            id: existingBooking._id,
+            previousUser: existingBooking.organizer,
+            previousRole: existingRole,
+            previousEmail: existingBooking.email,
+            originalVenue,
+            date: existingBooking.date,
+            time: existingBooking.time,
+            action: 'cancelled',
+            reason: existingBooking.movedReason
+          }
+
+          await sendBookingNotification(existingBooking, 'cancelled', {
+            reason: existingBooking.movedReason
+          })
+        }
+      }
+    }
+
+    booking.status = status
+    booking.updatedAt = new Date()
+    if (status === 'approved') {
+      booking.approvalDate = new Date()
+      booking.approvedBy = userEmail
+    }
+    await booking.save()
+
     if (status === 'approved') {
       await sendBookingNotification(booking, 'approved')
     } else if (status === 'rejected') {
       await sendBookingNotification(booking, 'rejected')
+    } else if (status === 'cancelled') {
+      await sendBookingNotification(booking, 'cancelled')
     }
 
     return res.status(200).json({
       success: true,
-      booking
+      booking,
+      reassignment: reassignmentInfo
     })
   } catch (error) {
     console.error('Error updating booking:', error)
@@ -455,7 +624,7 @@ async function updateBooking(req, res) {
 async function deleteBooking(req, res) {
   try {
     const bookingId = req.body?.bookingId || req.query?.bookingId
-    const userEmail = req.headers.useremail || req.query.userEmail
+    const userEmail = String(req.headers.useremail || req.query.userEmail || '').trim().toLowerCase()
 
     if (!bookingId) {
       return res.status(400).json({
@@ -473,9 +642,12 @@ async function deleteBooking(req, res) {
       })
     }
 
-    const adminEmails = ['admin@msec.edu.in']
-    const isAdmin = adminEmails.includes(userEmail)
-    const isOwner = booking.email === userEmail
+    const adminRoles = ['admin', 'principal', 'secretary']
+    const escapedEmail = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const deleterUser = await User.findOne({ email: userEmail }) || await User.findOne({ email: new RegExp(`^${escapedEmail}$`, 'i') })
+    const deleterRole = deleterUser ? normalizeBookingRole(deleterUser.role) : null
+    const isAdmin = deleterRole && adminRoles.includes(deleterRole)
+    const isOwner = String(booking.email || '').trim().toLowerCase() === userEmail
 
     if (!isAdmin && !isOwner) {
       return res.status(403).json({

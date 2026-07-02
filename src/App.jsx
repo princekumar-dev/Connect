@@ -64,7 +64,7 @@ function AppContent() {
         ...(isAuthPage
           ? {
               backgroundImage:
-                "linear-gradient(rgba(17, 24, 39, 0.38), rgba(17, 24, 39, 0.38)), url('/images/campus.jpeg')",
+                "linear-gradient(rgba(17, 24, 39, 0.38), rgba(17, 24, 39, 0.38)), url('/images/campus.webp')",
               backgroundSize: 'cover',
               backgroundPosition: 'center center',
               backgroundRepeat: 'no-repeat'
@@ -75,7 +75,7 @@ function AppContent() {
       <div className={`w-full max-w-full flex min-h-screen flex-col ${isAuthPage ? 'relative z-10' : ''}`}>
         <Header />
         <div className="flex flex-1 justify-center w-full">
-          <main className={`${isAuthPage ? 'flex flex-col w-full max-w-full' : 'layout-content-container flex flex-col w-full max-w-full md:pb-0'}`}>
+          <main className={`${isAuthPage ? 'flex flex-col w-full max-w-full' : 'layout-content-container flex flex-col w-full max-w-full pb-24 md:pb-0'}`}>
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 <Route path="/" element={<Home />} />
