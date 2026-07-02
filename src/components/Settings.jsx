@@ -283,6 +283,12 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
     setPasswordError('')
   }
 
+  useEffect(() => {
+    if (!isOpen) {
+      closePasswordModal()
+    }
+  }, [isOpen])
+
   const handleLogout = () => {
     try {
       onClose()
@@ -540,6 +546,94 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
     </div>
   )
 
+  const passwordResetOverlay = (
+    <div 
+      className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4"
+      onClick={(e) => {
+        e.stopPropagation()
+        closePasswordModal()
+      }}
+    >
+      <div 
+        className="bg-white rounded-2xl p-6 w-full max-w-[356px] mx-4 shadow-2xl flex flex-col max-h-[95%] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-2xl font-bold text-gray-900 mb-6 text-left">Reset Password</h3>
+        
+        {passwordError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-red-700">{passwordError}</p>
+          </div>
+        )}
+
+        <div className="space-y-4 mb-6 text-left">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Enter current password"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-500 focus:outline-none text-base placeholder-gray-400"
+              autoComplete="current-password"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter new password (min. 6 charac"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-500 focus:outline-none text-base placeholder-gray-400"
+              autoComplete="new-password"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm new password"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-500 focus:outline-none text-base placeholder-gray-400"
+              autoComplete="new-password"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              closePasswordModal()
+            }}
+            disabled={passwordSaving}
+            className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 active:bg-gray-100 disabled:opacity-60 font-semibold text-sm transition-colors cursor-pointer"
+            style={{ touchAction: 'manipulation' }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              handlePasswordReset()
+            }}
+            disabled={passwordSaving}
+            className="flex-1 py-2.5 bg-[#3d99f5] hover:bg-[#2b87e3] active:bg-[#1a73d2] text-white rounded-lg disabled:opacity-60 font-semibold text-sm transition-colors cursor-pointer"
+            style={{ touchAction: 'manipulation' }}
+          >
+            {passwordSaving ? 'Updating...' : 'Reset Password'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
   const settingsPanel = (
     <div
       ref={settingsRef}
@@ -561,95 +655,16 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
     >
       <SettingsContent />
       <SettingsBody />
+      {showPasswordModal && passwordResetOverlay}
     </div>
   )
 
-  const passwordResetModal = (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.currentTarget === e.target) {
-          closePasswordModal()
-        }
-      }}
-    >
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Reset Password</h2>
-
-        {passwordError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-red-700">{passwordError}</p>
-          </div>
-        )}
-
-        <div className="space-y-4 mb-6">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Current Password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Enter current password"
-              className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-500 focus:outline-none text-base"
-              autoComplete="current-password"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Enter new password (min. 6 characters)"
-              className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-500 focus:outline-none text-base"
-              autoComplete="new-password"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirm new password"
-              className="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-500 focus:outline-none text-base"
-              autoComplete="new-password"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={closePasswordModal}
-            disabled={passwordSaving}
-            className="flex-1 px-4 py-2.5 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-60 font-semibold text-sm transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePasswordReset}
-            disabled={passwordSaving}
-            className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 font-semibold text-sm transition-colors"
-          >
-            {passwordSaving ? 'Updating...' : 'Update Password'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-
-  // Desktop: render as dropdown (inline, no portal - so absolute positioning works relative to parent)
+  // Desktop: render as dropdown (inline, no portal)
   if (!mobileMode) {
     return (
-      <>
-        <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 p-3 z-50 desktop-offset">
-          {settingsPanel}
-        </div>
-        {showPasswordModal && ReactDOM.createPortal(passwordResetModal, document.body)}
-      </>
+      <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 p-3 z-50 desktop-offset">
+        {settingsPanel}
+      </div>
     )
   }
 
@@ -674,21 +689,10 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
   )
 
   if (typeof document !== 'undefined') {
-    return ReactDOM.createPortal(
-      <>
-        {mobileModalContent}
-        {showPasswordModal && passwordResetModal}
-      </>,
-      document.body
-    )
+    return ReactDOM.createPortal(mobileModalContent, document.body)
   }
 
-  return (
-    <>
-      {mobileModalContent}
-      {showPasswordModal && passwordResetModal}
-    </>
-  )
+  return mobileModalContent
 }
 
 export default Settings

@@ -6,6 +6,7 @@ import Header from './components/Header'
 import BottomNav from './components/BottomNav'
 import { initNotifications } from './utils/notifications'
 import { ensureBodyScrollable } from './utils/scrollFix'
+import GlobalExecutionLoader from './components/GlobalExecutionLoader'
 
 // Lazy load components for better performance
 const Home = lazy(() => import('./pages/Home'))
@@ -72,6 +73,7 @@ function AppContent() {
           : {})
       }}
     >
+      <GlobalExecutionLoader />
       <div className={`w-full max-w-full flex min-h-screen flex-col ${isAuthPage ? 'relative z-10' : ''}`}>
         <Header />
         <div className="flex flex-1 justify-center w-full">

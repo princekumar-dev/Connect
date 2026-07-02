@@ -349,31 +349,31 @@ function Header() {
                   )}
                 </button>
 
-                <button
-                  onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-                  className="flex items-center gap-2 px-3 h-10 rounded-xl bg-white/55 hover:bg-white/90 border border-white/60 shadow-sm transition-all group"
-                  title="Settings"
-                >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3d99f5] to-[#2b87e3] flex items-center justify-center shadow-md shadow-blue-500/20">
-                    <span className="text-sm font-bold text-white">
-                      {userEmail?.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium text-[#111418] hidden xl:inline truncate max-w-[150px] group-hover:text-[#3d99f5]">
-                    {userEmail}
-                  </span>
-                  <svg 
-                    className={`w-4 h-4 text-[#60758a] transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`} 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
+                <div className="relative">
+                  <button
+                    onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                    className="flex items-center gap-2 px-3 h-10 rounded-xl bg-white/55 hover:bg-white/90 border border-white/60 shadow-sm transition-all group"
+                    title="Settings"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {/* Desktop Settings Dropdown */}
-                <div className="hidden lg:block relative">
-                  {!isSmallViewport && (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#3d99f5] to-[#2b87e3] flex items-center justify-center shadow-md shadow-blue-500/20">
+                      <span className="text-sm font-bold text-white">
+                        {userEmail?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-[#111418] hidden xl:inline truncate max-w-[150px] group-hover:text-[#3d99f5]">
+                      {userEmail}
+                    </span>
+                    <svg 
+                      className={`w-4 h-4 text-[#60758a] transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {/* Desktop Settings Dropdown */}
+                  {!isSmallViewport && isSettingsOpen && (
                     <Settings 
                       isOpen={isSettingsOpen} 
                       onClose={() => setIsSettingsOpen(false)}
