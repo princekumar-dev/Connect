@@ -520,19 +520,18 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
       onTouchEnd={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
-      className={`w-full max-w-sm mx-auto max-h-[90vh] flex flex-col relative overflow-hidden border border-white/20 ${
+      className={`w-full mx-auto flex flex-col relative overflow-hidden border border-white/20 ${
         mobileMode
-          ? 'rounded-2xl bg-white shadow-2xl'
-          : 'rounded-xl bg-white backdrop-blur-xl no-mobile-backdrop shadow-lg'
+          ? 'rounded-t-2xl rounded-b-none bg-white shadow-2xl max-h-[85vh]'
+          : 'rounded-xl bg-white backdrop-blur-xl no-mobile-backdrop shadow-lg max-w-sm max-h-[90vh]'
       }`}
       style={{
         WebkitTapHighlightColor: 'transparent',
         touchAction: mobileMode ? 'pan-y' : 'manipulation',
         userSelect: 'none',
         WebkitUserSelect: 'none',
-        maxWidth: 'min(24rem, calc(100vw - 2rem))',
         boxSizing: 'border-box',
-        boxShadow: mobileMode ? '0 24px 60px rgba(2,6,23,0.22)' : '0 8px 28px rgba(2,6,23,0.06)'
+        boxShadow: mobileMode ? '0 -4px 30px rgba(2,6,23,0.18)' : '0 8px 28px rgba(2,6,23,0.06)'
       }}
     >
         {/* Close button */}
@@ -948,7 +947,7 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
 
   const mobileModalContent = (
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm sm:p-4"
       onClick={(e) => {
         if (e.currentTarget === e.target && !isInitializing) {
           onClose()
@@ -959,7 +958,9 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
         paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
       }}
     >
-      {settingsPanel}
+      <div className="w-full sm:w-auto sm:max-w-sm mx-auto max-h-[85vh] overflow-hidden">
+        {settingsPanel}
+      </div>
     </div>
   )
 
