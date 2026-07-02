@@ -372,7 +372,7 @@ function Header() {
                   </svg>
                 </button>
                 {/* Desktop Settings Dropdown */}
-                <div className="hidden lg:block">
+                <div className="hidden lg:block relative">
                   {!isSmallViewport && (
                     <Settings 
                       isOpen={isSettingsOpen} 

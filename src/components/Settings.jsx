@@ -641,16 +641,15 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
     </div>
   )
 
-  // Desktop: render as dropdown
+  // Desktop: render as dropdown (inline, no portal - so absolute positioning works relative to parent)
   if (!mobileMode) {
-    return ReactDOM.createPortal(
+    return (
       <>
         <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 p-3 z-50 desktop-offset">
           {settingsPanel}
         </div>
-        {showPasswordModal && passwordResetModal}
-      </>,
-      document.body
+        {showPasswordModal && ReactDOM.createPortal(passwordResetModal, document.body)}
+      </>
     )
   }
 
