@@ -934,14 +934,13 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
   )
 
   if (!mobileMode) {
-    return ReactDOM.createPortal(
+    return (
       <>
         <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 p-3 z-50 desktop-offset">
           {settingsPanel}
         </div>
         {passwordResetModal}
-      </>,
-      document.body
+      </>
     )
   }
 
