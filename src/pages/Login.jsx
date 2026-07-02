@@ -166,7 +166,7 @@ function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-500 hover:text-slate-700 transition-colors"
+                    className="absolute inset-y-0 right-0 flex items-center justify-center w-12 text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? (
@@ -189,7 +189,7 @@ function Login() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="login-wave-button w-full py-3.5 sm:py-4 px-6 text-white text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3.5 sm:py-4 px-6 text-white text-base sm:text-lg font-bold rounded-xl sm:rounded-2xl bg-[#3d99f5] hover:bg-[#2b87e0] active:scale-[0.98] shadow-lg shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="truncate">
                     {isLoading ? 'Signing in...' : 'Sign In'}
