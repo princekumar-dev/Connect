@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectToDatabase } from './lib/mongo.js';
 import mongoose from 'mongoose';
 import './automated-event-scheduler.js'; // 🚀 Automated event notifications scheduler
+import { authenticateRequest } from './lib/auth.js';
 
 // Load environment variables
 dotenv.config();
@@ -13,6 +14,7 @@ const PORT = 3001; // Backend API server port
 
 app.use(cors());
 app.use(express.json());
+app.use(authenticateRequest);
 
 // Lightweight timing middleware to log slow requests (helps diagnose slow deployed API)
 app.use((req, res, next) => {

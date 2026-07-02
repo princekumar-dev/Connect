@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import ReactDOM from 'react-dom'
+import { authFetch } from '../utils/api'
 
 function formatNotificationTime(value) {
   const date = new Date(value)
@@ -59,7 +60,7 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
     setError('')
 
     try {
-      const response = await fetch(`/api/notifications/user/${encodeURIComponent(userEmail)}?limit=100`, {
+      const response = await authFetch(`/api/notifications/user/${encodeURIComponent(userEmail)}?limit=100`, {
         headers: { userEmail }
       })
       const responseText = await response.text()
@@ -110,7 +111,7 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
     if (!notification || notification.read) return
 
     try {
-      const response = await fetch(`/api/notifications/${notification._id}/read`, {
+      const response = await authFetch(`/api/notifications/${notification._id}/read`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -151,7 +152,7 @@ function NotificationCenter({ isOpen, onClose, userEmail, onCountsUpdate }) {
     if (!userEmail || unreadCount === 0) return
 
     try {
-      const response = await fetch('/api/notifications/read-all', {
+      const response = await authFetch('/api/notifications/read-all', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -81,6 +81,9 @@ function Login() {
         localStorage.setItem('isLoggedIn', 'true')
         localStorage.setItem('userEmail', data.user.email)
         localStorage.setItem('userRole', data.user.role)
+        if (data.token) {
+          localStorage.setItem('token', data.token)
+        }
 
         navigate('/')
         window.dispatchEvent(new Event('authStateChanged'))

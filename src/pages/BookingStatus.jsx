@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ConfirmDialog, Toast } from '../components/NotificationModal'
 import CalendarExportModal from '../components/CalendarExportModal'
+import { BookingListSkeleton } from '../components/Skeleton'
+import { authFetch } from '../utils/api'
 
 function BookingStatus() {
   const [bookings, setBookings] = useState([])
@@ -76,7 +78,7 @@ function BookingStatus() {
 
   const checkServerConnection = async () => {
     try {
-      const response = await fetch('/api/venues', {
+      const response = await authFetch('/api/venues', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -124,7 +126,7 @@ function BookingStatus() {
         headers['isAdmin'] = 'true'
       }
       
-      const response = await fetch('/api/bookings', { headers })
+      const response = await authFetch('/api/bookings', { headers })
 
       if (!response.ok) {
         throw new Error(`Failed to fetch bookings (${response.status})`)
@@ -175,7 +177,7 @@ function BookingStatus() {
     // mark as updating to prevent duplicates and show disabled state
     setUpdatingIds(prev => new Set(prev).add(bookingId))
     try {
-      const response = await fetch('/api/bookings', {
+      const response = await authFetch('/api/bookings', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -274,7 +276,7 @@ function BookingStatus() {
 
   const deleteBooking = async (bookingId) => {
     try {
-      const response = await fetch('/api/bookings', {
+      const response = await authFetch('/api/bookings', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -482,10 +484,7 @@ function BookingStatus() {
 
             {/* Loading Indicator */}
             {loading && (
-              <div className="flex items-center justify-center py-8">
-                <div className="loading-spinner"></div>
-                <p className="ml-3 text-[#637588]">Loading your bookings...</p>
-              </div>
+              <BookingListSkeleton />
             )}
 
             {/* Error Message */}
@@ -621,20 +620,23 @@ function BookingStatus() {
                             )
                           })()}
                           
-                          {/* Delete Button - Available for all users for their own bookings */}
-                          <div className="flex gap-2 mt-2">
-                            <button
-                              onClick={() => handleDeleteClick(booking._id)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-[0px] rounded font-medium transition-colors"
-                              title="Delete this booking"
-                            >
-                              <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m5 4v6m4-6v6M15 3H9l1 4h4l1-4z" />
-                              </svg>
-                              <span className="text-xs">Delete</span>
-                              🗑 Delete
-                            </button>
-                          </div>
+                          {/* Cancel Button - Available for active bookings */}
+                          {['pending', 'approved', 'confirmed'].includes(booking.status) && (
+                            <div className="flex gap-2 mt-2">
+                              <button
+                                onClick={() => handleDeleteClick(booking._id)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-xl font-semibold transition-all hover:scale-[1.02] shadow-sm hover:shadow-md"
+                                title="Cancel this booking"
+                              >
+                                <svg className="w-3.5 h-3.5 shrink-0 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 7m5 4v6m4-6v6M15 3H9l1 4h4l1-4z" />
+                                </svg>
+                                <span className="text-xs">
+                                  {booking.status === 'pending' ? 'Cancel Request' : 'Cancel Booking'}
+                                </span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -707,10 +709,10 @@ function BookingStatus() {
         isOpen={confirmDialog.isOpen}
         onClose={() => setConfirmDialog({ isOpen: false, bookingId: null })}
         onConfirm={handleDeleteConfirm}
-        title="Delete Booking"
-        message="Are you sure you want to delete this booking? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
+        title="Cancel Booking"
+        message="Are you sure you want to cancel this booking? This action cannot be undone."
+        confirmText="Cancel Booking"
+        cancelText="Keep Booking"
         type="danger"
       />
 

@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { ConfirmDialog } from '../components/NotificationModal'
 import RefreshButton from '../components/RefreshButton'
+import { UserGridSkeleton } from '../components/Skeleton'
+import { showAppToast } from '../utils/feedback'
 import { getCurrentUser } from '../utils/auth-helper.js'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useRef } from 'react'
+import { authFetch } from '../utils/api'
 
 function ManageUsers() {
   const [users, setUsers] = useState([])
@@ -35,7 +38,7 @@ function ManageUsers() {
       if (current?.email) headers['userEmail'] = current.email
       if ((current?.role || '').toLowerCase() === 'admin') headers['isAdmin'] = 'true'
 
-      const res = await fetch('/api/users', { headers })
+      const res = await authFetch('/api/users', { headers })
       let data = null
       try {
         data = await res.json()
@@ -166,7 +169,7 @@ function ManageUsers() {
     const newUser = { name, email, password, role }
     setIsAddingUser(true)
     try {
-      const res = await fetch('/api/users', {
+      const res = await authFetch('/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser)
@@ -184,8 +187,10 @@ function ManageUsers() {
       setEmail('')
       setPassword('')
       setRole('staff')
+      showAppToast('User added successfully.', 'success')
     } catch (err) {
       setError(err.message)
+      showAppToast(err.message || 'Failed to add user.', 'error')
     } finally {
       setIsAddingUser(false)
     }
@@ -197,7 +202,7 @@ function ManageUsers() {
     // Optimistically update UI and call PATCH endpoint
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, autoApprove: value } : u))
     try {
-      const res = await fetch(`/api/users?action=auto-approve&userId=${encodeURIComponent(userId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autoApprove: value }) })
+      const res = await authFetch(`/api/users?action=auto-approve&userId=${encodeURIComponent(userId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ autoApprove: value }) })
       if (!res.ok) throw new Error('Failed to update auto-approve')
       // Refresh to ensure canonical state
       await fetchUsersFromApi()
@@ -212,7 +217,7 @@ function ManageUsers() {
     // enforce that high users take precedence in client-side logic where needed.
     setUsers(prev => prev.map(u => u.id === userId ? { ...u, priority: newPriority } : u))
     try {
-      const res = await fetch(`/api/users?action=priority&userId=${encodeURIComponent(userId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ priority: newPriority }) })
+      const res = await authFetch(`/api/users?action=priority&userId=${encodeURIComponent(userId)}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ priority: newPriority }) })
       if (!res.ok) throw new Error('Failed to update priority')
       await fetchUsersFromApi()
     } catch (err) {
@@ -229,7 +234,7 @@ function ManageUsers() {
 
   const deleteUser = async (userId) => {
     try {
-      const res = await fetch('/api/users', {
+      const res = await authFetch('/api/users', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
@@ -238,15 +243,18 @@ function ManageUsers() {
       if (res.ok && (data.success || data.deleted)) {
         // remove locally without refetching for snappier UI
         setUsers(prev => prev.filter(u => u.id !== userId))
+        showAppToast('User deleted successfully.', 'success')
         // attempt canonical refresh in background
         fetchUsersFromApi()
       } else {
         // fallback: refresh to ensure canonical state and show console
         console.warn('Failed to delete user on server:', data.error || data)
+        showAppToast(data.error || 'Failed to delete user.', 'error')
         await fetchUsersFromApi()
       }
     } catch (err) {
       console.error('Error deleting user:', err.message)
+      showAppToast(err.message || 'Failed to delete user.', 'error')
       await fetchUsersFromApi()
     }
   }
@@ -323,7 +331,9 @@ function ManageUsers() {
           {/* User list - use grid cards similar to venues */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
             {loading ? (
-              <div className="col-span-full text-center py-8">Loading users...</div>
+              <div className="col-span-full">
+                <UserGridSkeleton />
+              </div>
             ) : filteredUsers.length === 0 ? (
               <div className="col-span-full">
                 <div className="glass-card no-mobile-backdrop p-12 text-center mobile-smoothest-scroll">

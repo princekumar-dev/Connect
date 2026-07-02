@@ -9,6 +9,23 @@
   --mobile-bottom-nav-offset: 4rem;
 }
 
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.72) 0%, rgba(241, 245, 249, 0.95) 45%, rgba(226, 232, 240, 0.72) 100%);
+  background-size: 220% 100%;
+  animation: skeletonShimmer 1.25s ease-in-out infinite;
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
 @media (max-width: 768px) {
   :root {
     --layout-gutter: 0.875rem;

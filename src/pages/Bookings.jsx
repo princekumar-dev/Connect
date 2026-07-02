@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ConfirmDialog, Toast } from '../components/NotificationModal'
 import RefreshButton from '../components/RefreshButton'
 import { showNotification } from '../utils/notifications'
+import { BookingListSkeleton } from '../components/Skeleton'
+import { authFetch } from '../utils/api'
 
 function Bookings() {
   const [bookings, setBookings] = useState([])
@@ -93,7 +95,7 @@ function Bookings() {
   useEffect(() => {
     const checkServerConnection = async () => {
       try {
-        const response = await fetch('/api/debug', { 
+        const response = await authFetch('/api/debug', { 
           method: 'GET',
           headers: { 'Content-Type': 'application/json' }
         })
@@ -121,7 +123,7 @@ function Bookings() {
 
   const fetchAllBookings = async (emailOverride = userEmail) => {
     try {
-      const response = await fetch('/api/bookings', {
+      const response = await authFetch('/api/bookings', {
         method: 'GET',
         headers: { 
           'Content-Type': 'application/json',
@@ -166,7 +168,7 @@ function Bookings() {
     // Prevent duplicate updates
     setUpdatingIds(prev => new Set(prev).add(bookingId))
     try {
-      const response = await fetch('/api/bookings', {
+      const response = await authFetch('/api/bookings', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',
@@ -235,7 +237,7 @@ function Bookings() {
 
   const deleteBooking = async (bookingId) => {
     try {
-      const response = await fetch('/api/bookings', {
+      const response = await authFetch('/api/bookings', {
         method: 'DELETE',
         headers: { 
           'Content-Type': 'application/json',
@@ -457,10 +459,7 @@ function Bookings() {
           {/* Content */}
           <div className="space-y-6">
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="loading-spinner"></div>
-                <p className="ml-3 text-[#637588]">Loading all bookings...</p>
-              </div>
+              <BookingListSkeleton />
             ) : (
               <>
                 {/* Statistics Cards */}

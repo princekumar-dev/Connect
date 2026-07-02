@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { ConfirmDialog, Toast } from '../components/NotificationModal'
+import { PageSkeleton } from '../components/Skeleton'
+import { showAppToast } from '../utils/feedback'
 import * as XLSX from 'xlsx'
 
 function Events() {
@@ -151,7 +153,7 @@ function Events() {
       }
     } catch (error) {
       console.error('Error uploading image:', error)
-      alert('Failed to upload image. Please try again.')
+      showAppToast('Failed to upload image. Please try again.', 'error')
     } finally {
       setImageUploading(false)
     }
@@ -358,11 +360,7 @@ function Events() {
   }
 
   if (isLoading) {
-    return (
-      <div className="px-4 sm:px-6 md:px-10 lg:px-20 xl:px-40 flex flex-1 justify-center py-5">
-        <div className="text-center">Loading events...</div>
-      </div>
-    )
+    return <PageSkeleton route="/events" />
   }
   
   const handleDeleteClick = (eventId) => {

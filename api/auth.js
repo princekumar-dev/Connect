@@ -3,6 +3,7 @@ import { User } from '../models.js'
 import bcrypt from 'bcryptjs'
 import { normalizeBookingRole } from '../lib/bookingRoles.js'
 import { validatePassword } from '../src/utils/validation.js'
+import { generateToken } from '../lib/auth.js'
 
 function isValidMsecEmail(email = '') {
   return /^[^\s@]+@msec\.edu\.in$/i.test(email.trim())
@@ -127,8 +128,10 @@ export default async function handler(req, res) {
       }
 
       // Authentication successful
+      const token = generateToken(user)
       return res.status(200).json({
         success: true,
+        token,
         user: {
           id: user._id,
           email: user.email,

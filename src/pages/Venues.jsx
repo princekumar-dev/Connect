@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import VenueCalendar from '../components/VenueCalendar'
 import CalendarExportModal from '../components/CalendarExportModal'
+import { authFetch } from '../utils/api'
 
 const STATUS_STYLES = {
   available: {
@@ -50,6 +51,20 @@ function getStatusMeta(status, statusMessage) {
   }
 }
 
+const venueImages = {
+  'KRS Seminar Hall': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA2rlCnsNR-UIxfZ0nNZolyZ43Pyr4wbO3p6NjlpiLcJqfGo4-6gywzRYgebe49V5NLwYHKio1Km-Wm99VwrDV1atwmIi5CrG_NoZMLX_mOH0HD9VwWVFl_PnDlKZ-9_bbDRy9c5ShrVvy5AbRl17CpKHWGqhjEL0ZXbxjUxbOJ8SiuOQeAukJFr3x1gLhm1WRWsXdHPPyiwoQd7XTFKWqEdUAbI9MEMfyncRv5LUas-pLcJZZcHHNDctfcn7STh3vvCPgGf2Dyh70',
+  'Civil Seminar Hall': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDjgOsL-A_REeuufLssM9EaibUxhAZgBKl8mndnm53aGLmLVH3ziHCXfaaHFugP5IVhumadYGjM2GpR-ekOidyzzDYktalRt85wVVvr8wSjrcWZmHSNEHHba6b2gnG_fOqK1DAcocBkPjyB0yvSE31LvjRIlfH70Huu7uI_2JEmB5mXeljDeCwb4_W_HgN5gR2K3Q10NDtl3mytzYbVk3TT2tgpDz1JYfismI5NVzR5tQe17C92ex_uKr6YT3BHaAoxQ5j7ns8FpKs',
+  'ECE Seminar Hall': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDmDbqEQHXUH4wr8OzixBFXpS311YEI7jTQw9LcPA6te44iHZk46T583WS6nm3l5zDharhmzGVglc4xwDju3sEe4FE6wQA-z7MLQc1B4_Q9DSYPG2xA8leVU6k2EOq4JRAak99vq2haLa2FjVdvV599Y4A3tBUCFvxp88-iECvOU1RxKXG5E86ClsGMozvxFh9P9OE8GgDALOE1xHDYYUdDastf6SydcfBhft71r62Jwf2KSZcxpWHr9hJTeuAuWwSSfV8li5QdYN0',
+  'MS Auditorium': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDd8eFSd1-5Wu-7D4PPy3b2KZOeSg2q68ctGvHwSBihGwh-mDrb_xUaQoBNnffDYf1eNzlFp8xlvxhQ05eVsly3b4HNtvn9pKvcyvKV6bu_SNe_HHT17IRLd-67WeadUpB2wntrcLItcpe4TnrgzE9yaI36fTrdx7EbD8N9BCpverP68hnL0LFsOivIdqZxdeM1KtQARdHNqbR00tVzKB66MfxgNnL_xJ2hqEJve-C-xZQerh0VVvbHdULnneqg2iJZiamHDYL1EtU'
+}
+
+const venueFeatures = {
+  'KRS Seminar Hall': ['Audio System', 'Stage', 'Main Auditorium', 'Projector'],
+  'Civil Seminar Hall': ['Department Hall', 'Audio System', 'Projector'],
+  'ECE Seminar Hall': ['Technical Equipment', 'Audio System', 'Smart Board'],
+  'MS Auditorium': ['Multi-Purpose Hall', 'Audio System', 'Stage', 'Large Capacity']
+}
+
 const Venues = () => {
   const navigate = useNavigate()
   const [venues, setVenues] = useState([])
@@ -60,11 +75,35 @@ const Venues = () => {
   const [showCalendarModal, setShowCalendarModal] = useState(false)
   const [showExportModal, setShowExportModal] = useState(false)
   const [selectedBooking, setSelectedBooking] = useState(null)
+  const [capacityFilter, setCapacityFilter] = useState('all')
+  const [selectedAmenities, setSelectedAmenities] = useState([])
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [showFilters, setShowFilters] = useState(false)
+
   const normalizedSearch = searchQuery.trim().toLowerCase()
   const filteredVenues = useMemo(() => {
-    if (!normalizedSearch) return venues
-    return venues.filter((venue) => venue.venue.toLowerCase().includes(normalizedSearch))
-  }, [venues, normalizedSearch])
+    let result = venues
+    if (normalizedSearch) {
+      result = result.filter((venue) => venue.venue.toLowerCase().includes(normalizedSearch))
+    }
+    if (capacityFilter === 'small') {
+      result = result.filter(v => v.capacity < 200)
+    } else if (capacityFilter === 'medium') {
+      result = result.filter(v => v.capacity >= 200 && v.capacity <= 300)
+    } else if (capacityFilter === 'large') {
+      result = result.filter(v => v.capacity >= 500)
+    }
+    if (statusFilter === 'available') {
+      result = result.filter(v => v.status === 'available')
+    }
+    if (selectedAmenities.length > 0) {
+      result = result.filter(v => {
+        const features = venueFeatures[v.venue] || []
+        return selectedAmenities.every(amenity => features.includes(amenity))
+      })
+    }
+    return result
+  }, [venues, normalizedSearch, capacityFilter, selectedAmenities, statusFilter])
 
   // Defensive reset: some overlays on other routes lock body scroll.
   // Ensure Venues always starts with normal document scrolling.
@@ -83,20 +122,7 @@ const Venues = () => {
     }
   }, [])
 
-  // Venue images mapping
-  const venueImages = {
-    'KRS Seminar Hall': 'https://lh3.googleusercontent.com/aida-public/AB6AXuA2rlCnsNR-UIxfZ0nNZolyZ43Pyr4wbO3p6NjlpiLcJqfGo4-6gywzRYgebe49V5NLwYHKio1Km-Wm99VwrDV1atwmIi5CrG_NoZMLX_mOH0HD9VwWVFl_PnDlKZ-9_bbDRy9c5ShrVvy5AbRl17CpKHWGqhjEL0ZXbxjUxbOJ8SiuOQeAukJFr3x1gLhm1WRWsXdHPPyiwoQd7XTFKWqEdUAbI9MEMfyncRv5LUas-pLcJZZcHHNDctfcn7STh3vvCPgGf2Dyh70',
-    'Civil Seminar Hall': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDjgOsL-A_REeuufLssM9EaibUxhAZgBKl8mndnm53aGLmLVH3ziHCXfaaHFugP5IVhumadYGjM2GpR-ekOidyzzDYktalRt85wVVvr8wSjrcWZmHSNEHHba6b2gnG_fOqK1DAcocBkPjyB0yvSE31LvjRIlfH70Huu7uI_2JEmB5mXeljDeCwb4_W_HgN5gR2K3Q10NDtl3mytzYbVk3TT2tgpDz1JYfismI5NVzR5tQe17C92ex_uKr6YT3BHaAoxQ5j7ns8FpKs',
-    'ECE Seminar Hall': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDmDbqEQHXUH4wr8OzixBFXpS311YEI7jTQw9LcPA6te44iHZk46T583WS6nm3l5zDharhmzGVglc4xwDju3sEe4FE6wQA-z7MLQc1B4_Q9DSYPG2xA8leVU6k2EOq4JRAak99vq2haLa2FjVdvV599Y4A3tBUCFvxp88-iECvOU1RxKXG5E86ClsGMozvxFh9P9OE8GgDALOE1xHDYYUdDastf6SydcfBhft71r62Jwf2KSZcxpWHr9hJTeuAuWwSSfV8li5QdYN0',
-    'MS Auditorium': 'https://lh3.googleusercontent.com/aida-public/AB6AXuDd8eFSd1-5Wu-7D4PPy3b2KZOeSg2q68ctGvHwSBihGwh-mDrb_xUaQoBNnffDYf1eNzlFp8xlvxhQ05eVsly3b4HNtvn9pKvcyvKV6bu_SNe_HHT17IRLd-67WeadUpB2wntrcLItcpe4TnrgzE9yaI36fTrdx7EbD8N9BCpverP68hnL0LFsOivIdqZxdeM1KtQARdHNqbR00tVzKB66MfxgNnL_xJ2hqEJve-C-xZQerh0VVvbHdULnneqg2iJZiamHDYL1EtU'
-  }
 
-  const venueFeatures = {
-    'KRS Seminar Hall': ['Audio System', 'Stage', 'Main Auditorium', 'Projector'],
-    'Civil Seminar Hall': ['Department Hall', 'Audio System', 'Projector'],
-    'ECE Seminar Hall': ['Technical Equipment', 'Audio System', 'Smart Board'],
-    'MS Auditorium': ['Multi-Purpose Hall', 'Audio System', 'Stage', 'Large Capacity']
-  }
 
   // Load venues
   useEffect(() => {
@@ -108,7 +134,7 @@ const Venues = () => {
           setLoading(true)
         }
 
-        const response = await fetch('/api/venues')
+        const response = await authFetch('/api/venues')
         const data = await response.json()
         if (!response.ok || !data.success) {
           throw new Error(data.error || 'Failed to load venues')
@@ -261,12 +287,12 @@ const Venues = () => {
               )}
             </div>
 
-            {/* Search Bar */}
-            <div className="flex justify-center mb-8">
-              <div className="relative max-w-md w-full">
-                <form onSubmit={handleSearchSubmit} className="glass-card no-mobile-backdrop flex w-full flex-1 items-stretch h-full overflow-hidden rounded-2xl shadow-2xl">
-                  <div className="flex items-center justify-center pl-4 sm:pl-6">
-                    <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            {/* Search Bar & Filter Toggle */}
+            <div className="flex items-center justify-center gap-3 mb-8 max-w-md mx-auto">
+              <div className="relative flex-1">
+                <form onSubmit={handleSearchSubmit} className="glass-card no-mobile-backdrop flex w-full items-stretch h-12 sm:h-14 overflow-hidden rounded-2xl shadow-2xl">
+                  <div className="flex items-center justify-center pl-4">
+                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" />
                       <line x1="16.5" y1="16.5" x2="21" y2="21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                     </svg>
@@ -276,13 +302,97 @@ const Venues = () => {
                     placeholder="Search venues..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden text-gray-900 focus:outline-0 focus:ring-0 h-full placeholder:text-gray-500 px-3 sm:px-4 text-sm sm:text-base md:text-lg font-medium leading-normal border-0 bg-transparent mobile-form-input tablet-form-input desktop-form-input"
+                    className="flex w-full min-w-0 flex-1 resize-none overflow-hidden text-gray-900 focus:outline-0 focus:ring-0 h-full placeholder:text-gray-500 px-3 text-sm sm:text-base font-medium leading-normal border-0 bg-transparent mobile-form-input tablet-form-input desktop-form-input"
                   />
-                  
                 </form>
               </div>
+              
+              <button
+                type="button"
+                onClick={() => setShowFilters(prev => !prev)}
+                className={`flex h-12 sm:h-14 w-12 sm:w-14 items-center justify-center rounded-2xl border transition-all hover:scale-[1.02] shadow-md flex-shrink-0 ${
+                  showFilters
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-blue-500/20'
+                    : 'bg-white border-slate-200 text-gray-600 hover:bg-slate-50'
+                }`}
+                title="Toggle Filters"
+              >
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+              </button>
             </div>
           </div>
+
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="glass-card no-mobile-backdrop max-w-4xl mx-auto p-6 mb-8 rounded-3xl border border-white/70 bg-white/80 shadow-md">
+              <h3 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                Filter Venues
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Capacity Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Capacity</label>
+                  <select
+                    value={capacityFilter}
+                    onChange={(e) => setCapacityFilter(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="all">All Capacities</option>
+                    <option value="small">Small (&lt; 200)</option>
+                    <option value="medium">Medium (200 - 300)</option>
+                    <option value="large">Large (500+)</option>
+                  </select>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Status</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="available">Only Available Now</option>
+                  </select>
+                </div>
+
+                {/* Amenities Filter */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-600 uppercase mb-2">Amenities</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Audio System', 'Stage', 'Projector', 'Smart Board'].map((amenity) => {
+                      const isSelected = selectedAmenities.includes(amenity)
+                      return (
+                        <button
+                          key={amenity}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAmenities(prev =>
+                              isSelected ? prev.filter(a => a !== amenity) : [...prev, amenity]
+                            )
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                            isSelected
+                              ? 'bg-blue-100 border-blue-300 text-blue-800'
+                              : 'bg-white border-slate-200 text-gray-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {amenity}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Venues Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mobile-gap-4 tablet-gap-6 desktop-gap-8">

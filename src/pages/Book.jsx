@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { Toast, AlertDialog } from '../components/NotificationModal'
+import { authFetch } from '../utils/api'
 
 const BOOKING_COOLDOWN_MINUTES = 30
 const ROLE_PRIORITY = {
@@ -102,7 +103,7 @@ function Book() {
 
   const fetchVenues = async () => {
     try {
-      const response = await fetch('/api/venues')
+      const response = await authFetch('/api/venues')
       const data = await response.json()
       if (data.success) {
         setVenues(data.venues)
@@ -116,7 +117,7 @@ function Book() {
     if (!formData.attendees || formData.attendees <= 0) return
     
     try {
-      const response = await fetch(`/api/venues/recommend/${formData.attendees}`)
+      const response = await authFetch(`/api/venues/recommend/${formData.attendees}`)
       const data = await response.json()
       if (data.success) {
         setRecommendations(data.venues)
@@ -173,7 +174,7 @@ function Book() {
     }
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `/api/bookings?venue=${encodeURIComponent(venue)}&date=${date}&time=${encodeURIComponent(time)}&duration=${duration}`
       )
       const data = await response.json()
@@ -231,7 +232,7 @@ function Book() {
         loggedInUser?.role ||
         (typeof localStorage !== 'undefined' ? localStorage.getItem('userRole') : '') ||
         ''
-      const response = await fetch('/api/bookings', {
+      const response = await authFetch('/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

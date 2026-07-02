@@ -8,6 +8,7 @@ import {
   isNotificationSupported,
   getNotificationPermission
 } from '../utils/notifications'
+import { showAppAlert, showAppToast } from '../utils/feedback'
 
 function NotificationSettings() {
   const [supported, setSupported] = useState(false)
@@ -39,6 +40,7 @@ function NotificationSettings() {
         await subscribeToNotifications()
         setPermission('granted')
         setSubscribed(true)
+        showAppToast('Notifications enabled successfully.', 'success')
         
         // Show success notification
         await showNotification('Notifications Enabled', {
@@ -46,11 +48,11 @@ function NotificationSettings() {
           tag: 'notification-enabled'
         })
       } else {
-        alert('Please allow notifications in your browser settings to receive updates.')
+        showAppAlert('Please allow notifications in your browser settings to receive updates.', { type: 'warning', title: 'Notifications blocked' })
       }
     } catch (error) {
       console.error('Error enabling notifications:', error)
-      alert('Failed to enable notifications. Please try again.')
+      showAppAlert('Failed to enable notifications. Please try again.', { type: 'error', title: 'Notifications' })
     } finally {
       setLoading(false)
     }
@@ -61,10 +63,10 @@ function NotificationSettings() {
     try {
       await unsubscribeFromNotifications()
       setSubscribed(false)
-      alert('Notifications disabled successfully.')
+      showAppToast('Notifications disabled successfully.', 'info')
     } catch (error) {
       console.error('Error disabling notifications:', error)
-      alert('Failed to disable notifications. Please try again.')
+      showAppAlert('Failed to disable notifications. Please try again.', { type: 'error', title: 'Notifications' })
     } finally {
       setLoading(false)
     }

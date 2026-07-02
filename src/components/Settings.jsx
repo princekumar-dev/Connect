@@ -11,6 +11,7 @@ import {
   checkCurrentSubscription
 } from '../utils/notifications'
 import { validatePassword } from '../utils/validation'
+import { showAppAlert, showAppToast } from '../utils/feedback'
 
 function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
   const navigate = useNavigate()
@@ -177,13 +178,13 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
           if (!subscription) {
             setNotificationsEnabled(false)
             saveSettings('notificationsEnabled', false)
-            alert('Unable to subscribe to notifications. Try again.')
+            showAppAlert('Unable to subscribe to notifications. Try again.', { type: 'error', title: 'Notifications' })
           }
         } else if (currentPerm === 'denied') {
           setNotificationsEnabled(false)
           saveSettings('notificationsEnabled', false)
           setNotificationPermission('denied')
-          alert('Please enable notifications in your browser settings')
+          showAppAlert('Please enable notifications in your browser settings.', { type: 'warning', title: 'Notifications blocked' })
         } else {
           const permissionGranted = await requestNotificationPermission()
           if (permissionGranted) {
@@ -192,23 +193,24 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
             if (!subscription) {
               setNotificationsEnabled(false)
               saveSettings('notificationsEnabled', false)
-              alert('Unable to subscribe to notifications. Try again.')
+              showAppAlert('Unable to subscribe to notifications. Try again.', { type: 'error', title: 'Notifications' })
             }
           } else {
             setNotificationsEnabled(false)
             saveSettings('notificationsEnabled', false)
             setNotificationPermission('denied')
-            alert('Please enable notifications in your browser settings')
+            showAppAlert('Please enable notifications in your browser settings.', { type: 'warning', title: 'Notifications blocked' })
           }
         }
       } else {
         await unsubscribeFromNotifications()
+        showAppToast('Notifications disabled.', 'info')
       }
     } catch (err) {
       console.error('Notification toggle error:', err)
       setNotificationsEnabled(!newState)
       saveSettings('notificationsEnabled', !newState)
-      alert('Failed to update notification settings')
+      showAppAlert('Failed to update notification settings.', { type: 'error', title: 'Settings not updated' })
     } finally {
       setNotificationLoading(false)
       toggleInProgressRef.current = false
@@ -265,7 +267,7 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
         return
       }
 
-      alert('Password updated successfully!')
+      showAppToast('Password updated successfully.', 'success')
       closePasswordModal()
     } catch (err) {
       console.error('Password reset error:', err)

@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Settings from './Settings'
 import NotificationCenter from './NotificationCenter'
+import { authFetch } from '../utils/api'
 
 function Header() {
   const location = useLocation()
@@ -85,6 +86,19 @@ function Header() {
 
   const checkAuthStatus = () => {
     const auth = localStorage.getItem('auth')
+    const token = localStorage.getItem('token')
+    const isLoggedInLegacy = localStorage.getItem('isLoggedIn') === 'true'
+
+    if ((auth || isLoggedInLegacy) && !token) {
+      localStorage.removeItem('auth')
+      localStorage.removeItem('isLoggedIn')
+      localStorage.removeItem('userEmail')
+      localStorage.removeItem('userRole')
+      window.dispatchEvent(new Event('authStateChanged'))
+      navigate('/login')
+      return
+    }
+
     if (auth) {
       try {
         const authData = JSON.parse(auth)
@@ -127,7 +141,7 @@ function Header() {
     }
 
     try {
-      const response = await fetch(`/api/notifications/user/${encodeURIComponent(userEmail)}?limit=100`, {
+      const response = await authFetch(`/api/notifications/user/${encodeURIComponent(userEmail)}?limit=100`, {
         headers: { userEmail }
       })
       const responseText = await response.text()
@@ -281,13 +295,16 @@ function Header() {
             <Link className={getLinkClassName('/')} to="/">Home</Link>
             <Link className={getLinkClassName('/venues')} to="/venues">Venues</Link>
             <Link className={getLinkClassName('/events')} to="/events">Events</Link>
-            {isLoggedIn && userRole === 'admin' && (
+            {isLoggedIn && ['admin', 'principal', 'secretary'].includes(userRole?.toLowerCase()) && (
+              <Link className={getLinkClassName('/dashboard')} to="/dashboard">Dashboard</Link>
+            )}
+            {isLoggedIn && ['admin', 'principal', 'secretary'].includes(userRole?.toLowerCase()) && (
               <Link className={getLinkClassName('/bookings')} to="/bookings">Bookings</Link>
             )}
             {isLoggedIn && userRole === 'admin' && (
               <Link className={getLinkClassName('/manage-users')} to="/manage-users">Manage Users</Link>
             )}
-            {isLoggedIn && userRole !== 'admin' && (
+            {isLoggedIn && !['admin', 'principal', 'secretary'].includes(userRole?.toLowerCase()) && (
               <Link className={getLinkClassName('/booking-status')} to="/booking-status">Booking Status</Link>
             )}
             <Link className={getLinkClassName('/contact')} to="/contact">Contact</Link>

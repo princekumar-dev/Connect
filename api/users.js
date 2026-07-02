@@ -17,6 +17,14 @@ export default async function handler(req, res) {
     return res.status(503).json({ success: false, error: 'Database connection failed' })
   }
 
+  // Enforce admin privileges on all endpoints except POST (user signup)
+  if (req.method !== 'POST') {
+    const adminRoles = ['admin', 'principal', 'secretary']
+    if (!req.user || !adminRoles.includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' })
+    }
+  }
+
   try {
     if (req.method === 'GET') {
       // list users (admin-only check could be added)

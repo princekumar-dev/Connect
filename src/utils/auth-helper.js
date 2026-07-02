@@ -27,6 +27,9 @@ export async function loginUser(email, password) {
     // Store auth data in localStorage
     localStorage.setItem('auth', JSON.stringify(data.user));
     localStorage.setItem('userEmail', email);
+    if (data.token) {
+      localStorage.setItem('token', data.token);
+    }
     
     console.log(`🔑 Logged in as: ${email} (${data.user.role})`);
     return data.user;
@@ -47,6 +50,7 @@ export async function logoutUser() {
     console.log('🔑 Clearing authentication state...');
     localStorage.removeItem('auth');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('token');
     
     console.log('👋 User logged out successfully');
     return true;
@@ -56,6 +60,7 @@ export async function logoutUser() {
     // Still remove auth data even if notification handling failed
     localStorage.removeItem('auth');
     localStorage.removeItem('userEmail');
+    localStorage.removeItem('token');
     
     throw error;
   }

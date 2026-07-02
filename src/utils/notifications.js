@@ -1,3 +1,5 @@
+import { showAppAlert } from './feedback'
+
 // Push Notification Utility
 class PushNotificationManager {
   constructor() {
@@ -20,7 +22,10 @@ class PushNotificationManager {
   async requestPermission() {
     if (!this.isSupported()) {
       console.warn('Push notifications are not supported in this browser');
-      alert('⚠️ Your browser does not support notifications.\n\nPlease use Chrome, Edge, or Firefox.');
+      showAppAlert('Your browser does not support notifications. Please use Chrome, Edge, or Firefox.', {
+        type: 'warning',
+        title: 'Notifications unavailable'
+      });
       return false;
     }
 
@@ -53,7 +58,10 @@ class PushNotificationManager {
           instructions += 'Go to Settings > Privacy > Notifications\nand allow notifications for this site.';
         }
         
-        alert(instructions);
+        showAppAlert(instructions, {
+          type: 'warning',
+          title: 'Notifications blocked'
+        });
         return false;
       }
 
@@ -77,7 +85,10 @@ class PushNotificationManager {
         return true;
       } else if (permission === 'denied') {
         console.warn('❌ User denied notification permission');
-        alert('⚠️ Notifications were blocked.\n\nYou won\'t receive event reminders.\nYou can enable them later in Settings.');
+        showAppAlert('Notifications were blocked. You will not receive event reminders. You can enable them later in Settings.', {
+          type: 'warning',
+          title: 'Notifications blocked'
+        });
         return false;
       } else {
         console.log('ℹ️ User dismissed notification permission request');
@@ -86,7 +97,10 @@ class PushNotificationManager {
       
     } catch (error) {
       console.error('❌ Error requesting notification permission:', error);
-      alert('⚠️ Error enabling notifications: ' + error.message);
+      showAppAlert('Error enabling notifications: ' + error.message, {
+        type: 'error',
+        title: 'Notifications'
+      });
       return false;
     }
   }
@@ -207,7 +221,13 @@ class PushNotificationManager {
           try { const authData = JSON.parse(auth); userEmail = authData.email; } catch (e) {}
         }
       }
-      if (!userEmail) { alert('Please login again to enable notifications'); return null; }
+      if (!userEmail) {
+        showAppAlert('Please login again to enable notifications.', {
+          type: 'warning',
+          title: 'Login required'
+        });
+        return null;
+      }
 
       // Check if already subscribed (browser-level subscription)
       let subscription = await this.registration.pushManager.getSubscription();
@@ -282,7 +302,10 @@ class PushNotificationManager {
 
       if (!userEmail) {
         console.error('❌ No userEmail found in localStorage');
-        alert('Please login again to enable push notifications.');
+        showAppAlert('Please login again to enable push notifications.', {
+          type: 'warning',
+          title: 'Login required'
+        });
         return false;
       }
 

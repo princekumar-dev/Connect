@@ -4,6 +4,7 @@ import { PageSkeleton } from './components/Skeleton'
 import ErrorBoundary from './components/ErrorBoundary'
 import Header from './components/Header'
 import BottomNav from './components/BottomNav'
+import { GlobalFeedbackHost } from './components/NotificationModal'
 import { initNotifications } from './utils/notifications'
 import { ensureBodyScrollable } from './utils/scrollFix'
 import GlobalExecutionLoader from './components/GlobalExecutionLoader'
@@ -22,10 +23,8 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const FAQ = lazy(() => import('./pages/FAQ'))
 const ManageUsers = lazy(() => import('./pages/ManageUsers'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
 const NotFound = lazy(() => import('./pages/NotFound'))
-
-// Suspense fallback
-const LoadingSpinner = () => (<PageSkeleton />)
 
 function AppContent() {
   const location = useLocation()
@@ -74,11 +73,12 @@ function AppContent() {
       }}
     >
       <GlobalExecutionLoader />
+      <GlobalFeedbackHost />
       <div className={`w-full max-w-full flex min-h-screen flex-col ${isAuthPage ? 'relative z-10' : ''}`}>
         <Header />
         <div className="flex flex-1 justify-center w-full">
           <main className={`${isAuthPage ? 'flex flex-col w-full max-w-full' : 'layout-content-container flex flex-col w-full max-w-full pb-24 md:pb-0'}`}>
-            <Suspense fallback={<LoadingSpinner />}>
+            <Suspense fallback={<PageSkeleton route={location.pathname} />}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/venues" element={<Venues />} />
@@ -86,6 +86,7 @@ function AppContent() {
                 <Route path="/book" element={<Book />} />
                 <Route path="/bookings" element={<Bookings />} />
                 <Route path="/booking-status" element={<BookingStatus />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/manage-users" element={<ManageUsers />} />

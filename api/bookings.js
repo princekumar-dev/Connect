@@ -145,12 +145,59 @@ export default async function handler(req, res) {
 
 async function getBookings(req, res) {
   try {
-    const userEmail = String(req.headers.useremail || req.query.userEmail || '').trim().toLowerCase()
-    const isAdmin = req.headers.isadmin === 'true' || req.headers.isAdmin === 'true' || req.query.isAdmin === 'true'
     const scope = req.query.scope
+    
+    // Non-calendar requests require authentication
+    if (scope !== 'calendar' && !req.user) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      })
+    }
+
+    const userEmail = req.user ? req.user.email.toLowerCase() : ''
+    const adminRoles = ['admin', 'principal', 'secretary']
+    const isUserAdmin = req.user ? adminRoles.includes(req.user.role) : false
+
+    if (scope === 'analytics') {
+      if (!isUserAdmin) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Admin access required' })
+      }
+      
+      const allBookings = await Booking.find().lean()
+      
+      const statusCounts = { approved: 0, pending: 0, cancelled: 0, rejected: 0 }
+      const venueCounts = {}
+      const purposeCounts = {}
+      let autoReassignedCount = 0
+      
+      allBookings.forEach(booking => {
+        const status = booking.status || 'pending'
+        statusCounts[status] = (statusCounts[status] || 0) + 1
+        venueCounts[booking.venue] = (venueCounts[booking.venue] || 0) + 1
+        
+        const cat = booking.purposeCategory || 'Other'
+        purposeCounts[cat] = (purposeCounts[cat] || 0) + 1
+        
+        if (booking.movedReason && booking.movedReason.includes('Automatically moved')) {
+          autoReassignedCount++
+        }
+      })
+      
+      return res.status(200).json({
+        success: true,
+        analytics: {
+          totalBookings: allBookings.length,
+          statusCounts,
+          venueCounts,
+          purposeCounts,
+          autoReassignedCount
+        }
+      })
+    }
 
     if (scope === 'calendar') {
-      const normalizedUserEmail = String(userEmail || '').trim().toLowerCase()
+      const normalizedUserEmail = userEmail
       const approvedBookings = await Booking.find({ status: { $in: ['approved', 'confirmed'] } }).sort({ date: 1, time: 1 }).lean()
       const userPendingBookings = normalizedUserEmail
         ? await Booking.find({ email: normalizedUserEmail, status: 'pending' }).sort({ date: 1, time: 1 }).lean()
@@ -165,16 +212,6 @@ async function getBookings(req, res) {
         isAdmin: false,
         scope: 'calendar'
       })
-    }
-
-    const adminRoles = ['admin', 'principal', 'secretary']
-    let isUserAdmin = false
-    if (userEmail) {
-      const escapedEmail = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      const adminUser = await User.findOne({ email: userEmail }) || await User.findOne({ email: new RegExp(`^${escapedEmail}$`, 'i') })
-      if (adminUser && (isAdmin || adminRoles.includes(normalizeBookingRole(adminUser.role)))) {
-        isUserAdmin = adminRoles.includes(normalizeBookingRole(adminUser.role))
-      }
     }
 
     if (isUserAdmin) {
@@ -216,6 +253,13 @@ async function getBookings(req, res) {
 }
 
 async function createBooking(req, res) {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    })
+  }
+
   try {
     const bookingData = req.body
     const headerEmail = req.headers.useremail || req.headers['user-email']
@@ -441,6 +485,14 @@ async function createBooking(req, res) {
 
 async function updateBooking(req, res) {
   try {
+    const adminRoles = ['admin', 'principal', 'secretary']
+    if (!req.user || !adminRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'Forbidden: Admin access required'
+      })
+    }
+
     const { bookingId, status } = req.body
 
     if (!bookingId || !status) {
@@ -458,24 +510,7 @@ async function updateBooking(req, res) {
       })
     }
 
-    const userEmail = String(req.headers.useremail || req.query.userEmail || '').trim().toLowerCase()
-    if (!userEmail) {
-      return res.status(401).json({
-        success: false,
-        error: 'Authentication required'
-      })
-    }
-
-    const adminRoles = ['admin', 'principal', 'secretary']
-    const escapedEmail = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const user = await User.findOne({ email: userEmail }) || await User.findOne({ email: new RegExp(`^${escapedEmail}$`, 'i') })
-    const userRole = user ? normalizeBookingRole(user.role) : null
-    if (!user || !adminRoles.includes(userRole)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Admin access required to update bookings'
-      })
-    }
+    const userEmail = req.user.email.toLowerCase()
 
     const booking = await Booking.findById(bookingId)
     if (!booking) {
@@ -622,9 +657,15 @@ async function updateBooking(req, res) {
 }
 
 async function deleteBooking(req, res) {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: 'Authentication required'
+    })
+  }
   try {
     const bookingId = req.body?.bookingId || req.query?.bookingId
-    const userEmail = String(req.headers.useremail || req.query.userEmail || '').trim().toLowerCase()
+    const userEmail = req.user.email.toLowerCase()
 
     if (!bookingId) {
       return res.status(400).json({
@@ -643,10 +684,7 @@ async function deleteBooking(req, res) {
     }
 
     const adminRoles = ['admin', 'principal', 'secretary']
-    const escapedEmail = userEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const deleterUser = await User.findOne({ email: userEmail }) || await User.findOne({ email: new RegExp(`^${escapedEmail}$`, 'i') })
-    const deleterRole = deleterUser ? normalizeBookingRole(deleterUser.role) : null
-    const isAdmin = deleterRole && adminRoles.includes(deleterRole)
+    const isAdmin = adminRoles.includes(req.user.role)
     const isOwner = String(booking.email || '').trim().toLowerCase() === userEmail
 
     if (!isAdmin && !isOwner) {
