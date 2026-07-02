@@ -888,10 +888,7 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
                 </button>
           </div>
         </div>
-          </>
-        )}
       </div>
-        </div>
 
         {/* Help Section */}
         <div className="border-t border-[#e7edf4] pt-3">
@@ -919,6 +916,8 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
             </button>
           </div>
         </div>
+          </>
+        )}
       </div>
 
       {/* Logout Section */}
