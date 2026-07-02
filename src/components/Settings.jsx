@@ -858,35 +858,6 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
     </div>
   )
 
-  if (!mobileMode) {
-    return ReactDOM.createPortal(
-      <>
-        <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 p-3 z-50 desktop-offset">
-          {settingsPanel}
-        </div>
-        {passwordResetModal}
-      </>,
-      document.body
-    )
-  }
-
-  const mobileModalContent = (
-    <div
-      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
-      onClick={(e) => {
-        if (e.currentTarget === e.target && !isInitializing) {
-          onClose()
-        }
-      }}
-      style={{
-        paddingTop: 'max(1rem, env(safe-area-inset-top))',
-        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
-      }}
-    >
-      {settingsPanel}
-    </div>
-  )
-
   const passwordResetModal = (
     <Modal isOpen={showPasswordReset} onClose={closePasswordReset} title="Reset Password" maxWidth="max-w-md">
       <div className="mb-4">
@@ -961,6 +932,35 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
         </div>
       </form>
     </Modal>
+  )
+
+  if (!mobileMode) {
+    return ReactDOM.createPortal(
+      <>
+        <div className="absolute top-full right-0 mt-2 w-80 sm:w-96 p-3 z-50 desktop-offset">
+          {settingsPanel}
+        </div>
+        {passwordResetModal}
+      </>,
+      document.body
+    )
+  }
+
+  const mobileModalContent = (
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={(e) => {
+        if (e.currentTarget === e.target && !isInitializing) {
+          onClose()
+        }
+      }}
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top))',
+        paddingBottom: 'max(1rem, env(safe-area-inset-bottom))'
+      }}
+    >
+      {settingsPanel}
+    </div>
   )
 
   if (typeof document !== 'undefined') {
