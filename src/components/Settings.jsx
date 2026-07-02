@@ -916,7 +916,7 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
             </button>
           </div>
         </div>
-          </>
+        </>
         )}
       </div>
 
