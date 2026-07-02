@@ -44,9 +44,7 @@ function BottomNav() {
     bookingItem
   ]
 
-  if (isUserAdmin) {
-    navItems.splice(3, 0, { name: 'Dashboard', path: '/dashboard', icon: 'dashboard' })
-  }
+
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/'

@@ -295,9 +295,7 @@ function Header() {
             <Link className={getLinkClassName('/')} to="/">Home</Link>
             <Link className={getLinkClassName('/venues')} to="/venues">Venues</Link>
             <Link className={getLinkClassName('/events')} to="/events">Events</Link>
-            {isLoggedIn && ['admin', 'principal', 'secretary'].includes(userRole?.toLowerCase()) && (
-              <Link className={getLinkClassName('/dashboard')} to="/dashboard">Dashboard</Link>
-            )}
+
             {isLoggedIn && ['admin', 'principal', 'secretary'].includes(userRole?.toLowerCase()) && (
               <Link className={getLinkClassName('/bookings')} to="/bookings">Bookings</Link>
             )}

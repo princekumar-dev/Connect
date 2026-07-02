@@ -1,12 +1,52 @@
-
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { authFetch } from '../utils/api'
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState('')
   const [isSearching, setIsSearching] = useState(false)
   const [isMobilePlaceholder, setIsMobilePlaceholder] = useState(false)
   const navigate = useNavigate()
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [analyticsData, setAnalyticsData] = useState(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState(null)
+
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true)
+    setAnalyticsError(null)
+    try {
+      const response = await authFetch('/api/bookings?scope=analytics')
+      if (!response.ok) {
+        throw new Error(`Failed to load analytics: HTTP ${response.status}`)
+      }
+      const resData = await response.json()
+      if (resData.success) {
+        setAnalyticsData(resData.analytics)
+      } else {
+        throw new Error(resData.error || 'Failed to fetch analytics')
+      }
+    } catch (err) {
+      console.error(err)
+      setAnalyticsError(err.message)
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const auth = localStorage.getItem('auth')
+    if (auth) {
+      try {
+        const user = JSON.parse(auth)
+        const role = user.role?.toLowerCase()
+        if (['admin', 'principal', 'secretary'].includes(role) || user.email === 'admin@msec.edu.in') {
+          setIsAdmin(true)
+          fetchAnalytics()
+        }
+      } catch (e) {}
+    }
+  }, [])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 640px)')
@@ -214,7 +254,160 @@ function Home() {
             </Link>
             </div>
           </div>
-          
+
+          {/* Admin Dashboard / Analytics Section */}
+          {isAdmin && (
+            <div className="mb-12">
+              <div className="text-center mb-8">
+                <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-4 py-2 text-blue-700 text-xs sm:text-sm font-semibold shadow-sm mb-4">
+                  <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  Live Utilization & Metrics
+                </div>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-gray-900 mb-4">
+                  System Analytics
+                </h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                  Monitor booking patterns, busy venues, and auto-reassignments.
+                </p>
+              </div>
+
+              {analyticsLoading && (
+                <div className="glass-card p-12 text-center rounded-3xl">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 font-semibold animate-pulse">Loading system analytics...</p>
+                </div>
+              )}
+
+              {analyticsError && (
+                <div className="glass-card p-8 text-center border-red-150 rounded-3xl">
+                  <div className="text-red-500 text-4xl mb-2">⚠️</div>
+                  <p className="text-gray-600 text-sm mb-4">Failed to load analytics: {analyticsError}</p>
+                  <button onClick={fetchAnalytics} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition">Retry</button>
+                </div>
+              )}
+
+              {!analyticsLoading && !analyticsError && analyticsData && (
+                <>
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgba(15,23,42,0.02)]">
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Total Bookings</span>
+                      <span className="text-3xl sm:text-4xl font-extrabold text-slate-800">{analyticsData.totalBookings}</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgba(15,23,42,0.02)] border-l-4 border-l-green-500">
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Approved</span>
+                      <span className="text-3xl sm:text-4xl font-extrabold text-green-700">{analyticsData.statusCounts?.approved || 0}</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgba(15,23,42,0.02)] border-l-4 border-l-yellow-500">
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Pending</span>
+                      <span className="text-3xl sm:text-4xl font-extrabold text-yellow-700">{analyticsData.statusCounts?.pending || 0}</span>
+                    </div>
+                    <div className="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgba(15,23,42,0.02)] border-l-4 border-l-blue-500">
+                      <span className="text-gray-500 text-xs font-bold uppercase tracking-wider block mb-1">Reassigned</span>
+                      <span className="text-3xl sm:text-4xl font-extrabold text-blue-700">{analyticsData.autoReassignedCount || 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Charts Grid */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    {/* Venue Utilisation Bar Chart */}
+                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgba(15,23,42,0.02)]">
+                      <h3 className="text-lg font-bold text-gray-800 mb-6">Venue Utilization</h3>
+                      <div className="space-y-5">
+                        {Object.keys(analyticsData.venueCounts || {}).map(venue => {
+                          const val = analyticsData.venueCounts[venue] || 0
+                          const maxVal = Math.max(...Object.values(analyticsData.venueCounts || {}), 1)
+                          const percent = Math.round((val / maxVal) * 100)
+                          return (
+                            <div key={venue} className="flex flex-col">
+                              <div className="flex justify-between text-sm font-semibold text-gray-700 mb-1">
+                                <span>{venue}</span>
+                                <span className="text-blue-600">{val} booking{val !== 1 ? 's' : ''}</span>
+                              </div>
+                              <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full rounded-full transition-all duration-500"
+                                  style={{ width: `${percent}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Status breakdown Donut */}
+                    <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_4px_20px_rgba(15,23,42,0.02)] flex flex-col justify-between">
+                      <h3 className="text-lg font-bold text-gray-800 mb-6">Status Breakdown</h3>
+                      <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-4">
+                        <div className="relative w-40 h-40">
+                          <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path
+                              className="text-slate-100"
+                              stroke="currentColor"
+                              strokeWidth="4.5"
+                              fill="none"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            />
+                            {analyticsData.totalBookings > 0 && (
+                              <>
+                                <path
+                                  className="text-green-500"
+                                  stroke="currentColor"
+                                  strokeWidth="4.5"
+                                  strokeDasharray={`${((analyticsData.statusCounts?.approved || 0) / analyticsData.totalBookings) * 100}, 100`}
+                                  fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <path
+                                  className="text-yellow-500"
+                                  stroke="currentColor"
+                                  strokeWidth="4.5"
+                                  strokeDasharray={`${((analyticsData.statusCounts?.pending || 0) / analyticsData.totalBookings) * 100}, 100`}
+                                  strokeDashoffset={`-${((analyticsData.statusCounts?.approved || 0) / analyticsData.totalBookings) * 100}`}
+                                  fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                                <path
+                                  className="text-red-500"
+                                  stroke="currentColor"
+                                  strokeWidth="4.5"
+                                  strokeDasharray={`${(((analyticsData.statusCounts?.cancelled || 0) + (analyticsData.statusCounts?.rejected || 0)) / analyticsData.totalBookings) * 100}, 100`}
+                                  strokeDashoffset={`-${(((analyticsData.statusCounts?.approved || 0) + (analyticsData.statusCounts?.pending || 0)) / analyticsData.totalBookings) * 100}`}
+                                  fill="none"
+                                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                />
+                              </>
+                            )}
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <span className="text-2xl font-black text-slate-800">{analyticsData.totalBookings}</span>
+                            <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Bookings</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3 font-semibold text-gray-700">
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="h-3 w-3 rounded-full bg-green-500 block"></span>
+                            <span>Approved ({analyticsData.statusCounts?.approved || 0})</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="h-3 w-3 rounded-full bg-yellow-500 block"></span>
+                            <span>Pending ({analyticsData.statusCounts?.pending || 0})</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="h-3 w-3 rounded-full bg-red-500 block"></span>
+                            <span>Cancelled/Rejected ({((analyticsData.statusCounts?.cancelled || 0) + (analyticsData.statusCounts?.rejected || 0))})</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Contact Us Section */}
           <div className="mb-6 sm:mb-12">
             <div className="glass-card no-mobile-backdrop p-8 text-center rounded-3xl">

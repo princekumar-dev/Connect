@@ -23,7 +23,6 @@ const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const FAQ = lazy(() => import('./pages/FAQ'))
 const ManageUsers = lazy(() => import('./pages/ManageUsers'))
-const Dashboard = lazy(() => import('./pages/Dashboard'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 function AppContent() {
@@ -86,7 +85,6 @@ function AppContent() {
                 <Route path="/book" element={<Book />} />
                 <Route path="/bookings" element={<Bookings />} />
                 <Route path="/booking-status" element={<BookingStatus />} />
-                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/manage-users" element={<ManageUsers />} />
