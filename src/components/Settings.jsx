@@ -555,7 +555,7 @@ function Settings({ isOpen, onClose, userEmail, userRole, isMobile = false }) {
       }}
     >
       <div 
-        className="bg-white rounded-2xl p-6 w-full max-w-[356px] mx-4 shadow-2xl flex flex-col max-h-[95%] overflow-y-auto"
+        className="bg-white rounded-2xl p-6 w-full max-w-[356px] shadow-2xl flex flex-col max-h-[95%] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-2xl font-bold text-gray-900 mb-6 text-left">Reset Password</h3>
