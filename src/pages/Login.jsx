@@ -83,6 +83,7 @@ function Login() {
         localStorage.setItem('userRole', data.user.role)
         if (data.token) {
           localStorage.setItem('token', data.token)
+          document.cookie = `auth_token=${encodeURIComponent(data.token)}; path=/; max-age=604800; SameSite=Lax`
         }
 
         navigate('/')

@@ -29,6 +29,7 @@ export async function loginUser(email, password) {
     localStorage.setItem('userEmail', email);
     if (data.token) {
       localStorage.setItem('token', data.token);
+      document.cookie = `auth_token=${encodeURIComponent(data.token)}; path=/; max-age=604800; SameSite=Lax`;
     }
     
     console.log(`🔑 Logged in as: ${email} (${data.user.role})`);
@@ -51,6 +52,7 @@ export async function logoutUser() {
     localStorage.removeItem('auth');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('token');
+    document.cookie = 'auth_token=; path=/; max-age=0';
     
     console.log('👋 User logged out successfully');
     return true;
@@ -61,6 +63,7 @@ export async function logoutUser() {
     localStorage.removeItem('auth');
     localStorage.removeItem('userEmail');
     localStorage.removeItem('token');
+    document.cookie = 'auth_token=; path=/; max-age=0';
     
     throw error;
   }

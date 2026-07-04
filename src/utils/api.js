@@ -7,6 +7,8 @@ export async function authFetch(url, options = {}) {
   if (token) {
     const separator = url.includes('?') ? '&' : '?'
     fetchUrl = `${url}${separator}token=${encodeURIComponent(token)}`
+    // Also set cookie so Vercel proxy can forward it to backend
+    document.cookie = `auth_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`
   }
   
   const headers = {
