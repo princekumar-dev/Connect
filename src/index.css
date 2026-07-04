@@ -906,12 +906,12 @@ img {
   background: #2c7ce5;
 }
 
-/* Auth pages (login/signup) scrollbar - dark track */
+/* Auth pages (login/signup) scrollbar - transparent track shows campus bg */
 .auth-page::-webkit-scrollbar-track {
-  background: rgba(17, 24, 39, 0.5);
+  background: transparent;
 }
 .auth-page {
-  scrollbar-color: #3d99f5 rgba(17, 24, 39, 0.5);
+  scrollbar-color: #3d99f5 transparent;
 }
 
 /* Firefox global scrollbar */
