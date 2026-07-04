@@ -12,12 +12,24 @@ function Home() {
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [analyticsError, setAnalyticsError] = useState(null)
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (retried = false) => {
     setAnalyticsLoading(true)
     setAnalyticsError(null)
     try {
       const response = await authFetch('/api/bookings?scope=analytics')
+      if (response.status === 401) {
+        if (!retried) {
+          await new Promise(r => setTimeout(r, 1500))
+          return fetchAnalytics(true)
+        }
+        setAnalyticsError('Session expired. Please log in again.')
+        return
+      }
       if (!response.ok) {
+        if (!retried) {
+          await new Promise(r => setTimeout(r, 1500))
+          return fetchAnalytics(true)
+        }
         const data = await response.json().catch(() => ({}))
         throw new Error(data.error || `Failed to load analytics: HTTP ${response.status}`)
       }
