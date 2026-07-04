@@ -13,26 +13,13 @@ function Home() {
   const [analyticsError, setAnalyticsError] = useState(null)
 
   const fetchAnalytics = async () => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      setAnalyticsError('Not authenticated')
-      return
-    }
     setAnalyticsLoading(true)
     setAnalyticsError(null)
     try {
       const response = await authFetch('/api/bookings?scope=analytics')
-      if (response.status === 401) {
-        localStorage.removeItem('auth')
-        localStorage.removeItem('token')
-        localStorage.removeItem('isLoggedIn')
-        localStorage.removeItem('userEmail')
-        localStorage.removeItem('userRole')
-        setAnalyticsError('Session expired. Please log in again.')
-        return
-      }
       if (!response.ok) {
-        throw new Error(`Failed to load analytics: HTTP ${response.status}`)
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || `Failed to load analytics: HTTP ${response.status}`)
       }
       const resData = await response.json()
       if (resData.success) {

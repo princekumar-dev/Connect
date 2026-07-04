@@ -1,4 +1,6 @@
 // API fetch wrapper that automatically appends the JWT Authorization token and compatibility headers
+let isRedirectingToLogin = false
+
 export async function authFetch(url, options = {}) {
   const token = localStorage.getItem('token');
   
@@ -35,8 +37,22 @@ export async function authFetch(url, options = {}) {
     } catch (e) {}
   }
   
-  return fetch(url, {
+  const response = await fetch(url, {
     ...options,
     headers,
   });
+
+  if (response.status === 401 && !isRedirectingToLogin) {
+    isRedirectingToLogin = true
+    localStorage.removeItem('auth')
+    localStorage.removeItem('token')
+    localStorage.removeItem('isLoggedIn')
+    localStorage.removeItem('userEmail')
+    localStorage.removeItem('userRole')
+    window.dispatchEvent(new Event('authStateChanged'))
+    window.location.href = '/login'
+    return response
+  }
+
+  return response
 }
