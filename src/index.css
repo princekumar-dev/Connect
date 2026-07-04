@@ -906,6 +906,14 @@ img {
   background: #2c7ce5;
 }
 
+/* Auth pages (login/signup) scrollbar - dark track */
+.auth-page::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.5);
+}
+.auth-page {
+  scrollbar-color: #3d99f5 rgba(17, 24, 39, 0.5);
+}
+
 /* Firefox global scrollbar */
 * {
   scrollbar-width: thin;

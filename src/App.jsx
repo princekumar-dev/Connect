@@ -51,7 +51,7 @@ function AppContent() {
 
   return (
     <div
-      className={`layout-shell flex w-full flex-col ${isAuthPage ? 'relative bg-cover bg-center bg-no-repeat bg-fixed' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
+      className={`layout-shell flex w-full flex-col ${isAuthPage ? 'relative bg-cover bg-center bg-no-repeat bg-fixed auth-page' : 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'}`}
       style={{
         fontFamily: 'Inter, Manrope, sans-serif',
         WebkitOverflowScrolling: 'touch',
