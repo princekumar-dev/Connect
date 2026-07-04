@@ -888,6 +888,30 @@ img {
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
+/* Global scrollbar - Connect blue (#3d99f5) */
+*::-webkit-scrollbar {
+  width: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #3d99f5;
+  border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #2c7ce5;
+}
+
+/* Firefox global scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #3d99f5 #f8fafc;
+}
+
 /* Ensure proper text wrapping and visibility */
 .settings-modal .truncate {
   overflow: hidden;
