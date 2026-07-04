@@ -35,6 +35,17 @@ function AppContent() {
     document.body.style.backgroundPosition = ''
     document.body.style.backgroundRepeat = ''
     document.body.style.backgroundAttachment = ''
+    if (isAuthPage) {
+      document.documentElement.classList.add('auth-page')
+      document.documentElement.style.background = 'transparent'
+      document.body.classList.add('auth-page')
+      document.body.style.background = 'transparent'
+    } else {
+      document.documentElement.classList.remove('auth-page')
+      document.documentElement.style.background = ''
+      document.body.classList.remove('auth-page')
+      document.body.style.background = ''
+    }
   }, [isAuthPage])
 
   // Initialize notifications when app loads

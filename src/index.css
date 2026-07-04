@@ -888,36 +888,75 @@ img {
   scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
-/* Global scrollbar - Connect blue (#3d99f5) */
-*::-webkit-scrollbar {
+/* Global scrollbar */
+*::-webkit-scrollbar,
+html::-webkit-scrollbar {
   width: 4px;
 }
 
-*::-webkit-scrollbar-track {
-  background: #f8fafc;
+*::-webkit-scrollbar-track,
+html::-webkit-scrollbar-track {
+  background: transparent !important;
 }
 
-*::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb,
+html::-webkit-scrollbar-thumb {
   background: #3d99f5;
   border-radius: 4px;
 }
 
-*::-webkit-scrollbar-thumb:hover {
+*::-webkit-scrollbar-thumb:hover,
+html::-webkit-scrollbar-thumb:hover {
   background: #2c7ce5;
 }
 
-/* Auth pages (login/signup) scrollbar - transparent track shows campus bg */
-.auth-page::-webkit-scrollbar-track {
-  background: transparent;
+/* Auth pages (login/signup) scrollbar - white thumb on transparent track shows campus bg */
+.auth-page::-webkit-scrollbar-track,
+html.auth-page::-webkit-scrollbar-track,
+body.auth-page::-webkit-scrollbar-track {
+  background: transparent !important;
 }
-.auth-page {
-  scrollbar-color: #3d99f5 transparent;
+.auth-page::-webkit-scrollbar-thumb,
+html.auth-page::-webkit-scrollbar-thumb,
+body.auth-page::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.7);
+}
+.auth-page::-webkit-scrollbar-thumb:hover,
+html.auth-page::-webkit-scrollbar-thumb:hover,
+body.auth-page::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+.auth-page,
+html.auth-page,
+body.auth-page {
+  scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
+}
+
+html.auth-page {
+  background: transparent !important;
+  background-color: transparent !important;
+  scrollbar-width: none !important;
+}
+html.auth-page::-webkit-scrollbar {
+  display: none !important;
+}
+body.auth-page {
+  background: transparent !important;
+  background-color: transparent !important;
+  scrollbar-width: none !important;
+}
+body.auth-page::-webkit-scrollbar {
+  display: none !important;
 }
 
 /* Firefox global scrollbar */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #3d99f5 #f8fafc;
+  scrollbar-color: #3d99f5 transparent;
+}
+
+html.auth-page, body.auth-page {
+  scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
 }
 
 /* Ensure proper text wrapping and visibility */
