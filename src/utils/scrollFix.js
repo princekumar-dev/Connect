@@ -4,6 +4,8 @@
  */
 export function ensureBodyScrollable() {
   const forceScrollable = () => {
+    if (document.documentElement.classList.contains('auth-page')) return
+
     if (document.body.style.overflow === 'hidden') {
       const hasOpenModal = document.querySelector('[role="dialog"]') ||
         document.querySelector('.modal') ||
@@ -37,7 +39,6 @@ export function ensureBodyScrollable() {
       style.innerHTML = `
       * { 
         touch-action: pan-y !important; 
-        overscroll-behavior: auto !important; 
       }
       .no-scroll {
         touch-action: none !important;
@@ -59,6 +60,7 @@ export function ensureBodyScrollable() {
 
 if (typeof window !== 'undefined') {
   const applyImmediateFix = () => {
+    if (document.documentElement.classList.contains('auth-page')) return
     document.body.style.overflow = ''
     document.body.style.overflowY = 'auto'
     document.body.style.height = 'auto'
@@ -77,6 +79,7 @@ if (typeof window !== 'undefined') {
 
   window.addEventListener('load', () => {
     setTimeout(() => {
+      if (document.documentElement.classList.contains('auth-page')) return
       document.body.style.overflow = ''
       document.body.style.overflowY = 'auto'
       document.documentElement.style.overflowY = 'auto'

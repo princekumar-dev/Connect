@@ -117,7 +117,7 @@ function Login() {
       `}</style>
 
       <div
-        className="relative min-h-screen overflow-hidden flex items-center justify-center px-3 sm:px-4 py-6 sm:py-8 smooth-scroll mobile-smoothest-scroll no-mobile-anim"
+        className="relative min-h-screen flex items-center justify-center px-3 sm:px-4 py-6 sm:py-8 smooth-scroll mobile-smoothest-scroll no-mobile-anim"
         style={{ fontFamily: 'Inter, sans-serif' }}
       >
 

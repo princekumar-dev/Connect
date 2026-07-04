@@ -930,6 +930,7 @@ body.auth-page::-webkit-scrollbar-thumb:hover {
 html.auth-page,
 body.auth-page {
   scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
+  overscroll-behavior: contain !important;
 }
 
 html.auth-page {

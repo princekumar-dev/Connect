@@ -30,21 +30,38 @@ function AppContent() {
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup'
 
   useEffect(() => {
+    const html = document.documentElement
+    const body = document.body
+
     document.body.style.backgroundImage = 'none'
     document.body.style.backgroundSize = ''
     document.body.style.backgroundPosition = ''
     document.body.style.backgroundRepeat = ''
     document.body.style.backgroundAttachment = ''
+
     if (isAuthPage) {
-      document.documentElement.classList.add('auth-page')
-      document.documentElement.style.background = 'transparent'
-      document.body.classList.add('auth-page')
-      document.body.style.background = 'transparent'
+      html.classList.add('auth-page')
+      html.style.background = 'transparent'
+      html.style.overflow = 'hidden'
+      body.classList.add('auth-page')
+      body.style.background = 'transparent'
+      body.style.overflow = 'hidden'
     } else {
-      document.documentElement.classList.remove('auth-page')
-      document.documentElement.style.background = ''
-      document.body.classList.remove('auth-page')
-      document.body.style.background = ''
+      html.classList.remove('auth-page')
+      html.style.background = ''
+      html.style.overflow = ''
+      body.classList.remove('auth-page')
+      body.style.background = ''
+      body.style.overflow = ''
+    }
+
+    return () => {
+      html.classList.remove('auth-page')
+      html.style.background = ''
+      html.style.overflow = ''
+      body.classList.remove('auth-page')
+      body.style.background = ''
+      body.style.overflow = ''
     }
   }, [isAuthPage])
 
@@ -66,11 +83,12 @@ function AppContent() {
       style={{
         fontFamily: 'Inter, Manrope, sans-serif',
         WebkitOverflowScrolling: 'touch',
-        minHeight: '100vh',
-        height: 'auto',
-        overflow: 'visible',
-        overflowY: 'auto',
+        minHeight: isAuthPage ? '100vh' : '100vh',
+        height: isAuthPage ? '100vh' : 'auto',
+        overflow: isAuthPage ? 'hidden' : 'visible',
+        overflowY: isAuthPage ? 'auto' : 'auto',
         overflowX: 'hidden',
+        ...(isAuthPage ? { overscrollBehavior: 'contain' } : {}),
         ...(isAuthPage
           ? {
               backgroundImage:
@@ -84,7 +102,7 @@ function AppContent() {
     >
       <GlobalExecutionLoader />
       <GlobalFeedbackHost />
-      <div className={`w-full max-w-full flex min-h-screen flex-col ${isAuthPage ? 'relative z-10' : ''}`}>
+      <div className={`w-full max-w-full flex flex-col ${isAuthPage ? 'relative z-10' : 'min-h-screen'}`}>
         <Header />
         <div className="flex flex-1 justify-center w-full">
           <main className={`${isAuthPage ? 'flex flex-col w-full max-w-full' : 'layout-content-container flex flex-col w-full max-w-full pb-24 md:pb-0'}`}>

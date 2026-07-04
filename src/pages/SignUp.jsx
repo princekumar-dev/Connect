@@ -97,7 +97,7 @@ function SignUp() {
         .login-wave-button:hover { animation-duration: 1.5s; }
       `}</style>
 
-      <div className="min-h-screen flex items-center justify-center px-4 py-8 smooth-scroll mobile-smoothest-scroll no-mobile-anim" style={{fontFamily: 'Inter, sans-serif'}}>
+      <div className="relative min-h-screen flex items-center justify-center px-4 py-8 smooth-scroll mobile-smoothest-scroll no-mobile-anim" style={{fontFamily: 'Inter, sans-serif'}}>
         <div className="w-full max-w-md">
           <div className="backdrop-blur-xl bg-[rgba(93,101,117,0.34)] border border-white/35 p-8 rounded-3xl shadow-2xl">
             <div className="text-center mb-8">
