@@ -1,15 +1,18 @@
+const RENDER_BACKEND = 'https://connect-m1wh.onrender.com'
+
+function isProduction() {
+  return import.meta.env.PROD
+}
+
+function resolveApiUrl(url) {
+  if (!isProduction()) return url
+  return url.startsWith('/api/') ? RENDER_BACKEND + url : url
+}
+
 // API fetch wrapper that automatically appends the JWT Authorization token and compatibility headers
 export async function authFetch(url, options = {}) {
   const token = localStorage.getItem('token');
-  
-  // Append token as query param as fallback (Vercel rewrites may strip Authorization header)
-  let fetchUrl = url
-  if (token) {
-    const separator = url.includes('?') ? '&' : '?'
-    fetchUrl = `${url}${separator}token=${encodeURIComponent(token)}`
-    // Also set cookie so Vercel proxy can forward it to backend
-    document.cookie = `auth_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`
-  }
+  const fetchUrl = resolveApiUrl(url)
   
   const headers = {
     ...options.headers,
