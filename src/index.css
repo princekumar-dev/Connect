@@ -960,6 +960,20 @@ html.auth-page, body.auth-page {
   scrollbar-color: rgba(255, 255, 255, 0.7) transparent;
 }
 
+/* Hide scrollbar on mobile */
+@media (max-width: 768px) {
+  *::-webkit-scrollbar,
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  * {
+    scrollbar-width: none !important;
+  }
+}
+
 /* Ensure proper text wrapping and visibility */
 .settings-modal .truncate {
   overflow: hidden;
