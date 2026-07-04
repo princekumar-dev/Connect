@@ -2,6 +2,13 @@
 export async function authFetch(url, options = {}) {
   const token = localStorage.getItem('token');
   
+  // Append token as query param as fallback (Vercel rewrites may strip Authorization header)
+  let fetchUrl = url
+  if (token) {
+    const separator = url.includes('?') ? '&' : '?'
+    fetchUrl = `${url}${separator}token=${encodeURIComponent(token)}`
+  }
+  
   const headers = {
     ...options.headers,
   };
@@ -35,7 +42,7 @@ export async function authFetch(url, options = {}) {
     } catch (e) {}
   }
   
-  return fetch(url, {
+  return fetch(fetchUrl, {
     ...options,
     headers,
   });
