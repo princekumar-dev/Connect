@@ -1,4 +1,17 @@
-# MSEC Connect - Venue Booking System
+<div align="center">
+
+# MSEC Connect — Venue Booking System
+
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vitejs.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://expressjs.com)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose_8-47A248?style=flat-square&logo=mongodb&logoColor=white)](https://www.mongodb.com)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](#-license)
+
+**[🔗 Live App](https://msec-connect.vercel.app/)**
+
+</div>
 
 ![MSEC Logo](public/images/mseclogo.png)
 
@@ -23,9 +36,16 @@
 
 ### 📅 Booking Management
 - **Easy Booking Process**: Streamlined venue reservation system
+- **Venue Calendar**: Interactive availability calendar (react-big-calendar) per venue
+- **Calendar Export**: One-click `.ics` export to Google Calendar / Outlook
+- **Automated Scheduling**: Cron-driven event reminders and notifications
 - **Booking History**: Track past and upcoming reservations
 - **Admin Approval**: Administrative oversight for booking approvals
 - **Event Management**: Organize and manage various types of events
+
+### 🔔 Notifications
+- **Web Push Notifications**: VAPID-based browser notifications for booking status and events
+- **Notification Center**: In-app notification feed with per-user settings
 
 ### 🎨 Modern UI/UX
 - **Responsive Design**: Optimized for desktop, tablet, and mobile devices
@@ -53,6 +73,11 @@
 - **ESBuild**: Ultra-fast JavaScript bundler
 - **Hot Module Replacement**: Real-time development updates
 - **Environment Variables**: Secure configuration management
+
+### Libraries
+- **react-big-calendar** + **ical-generator**: Venue availability calendar and `.ics` export
+- **node-cron**: Automated event reminders and scheduled notifications
+- **jsonwebtoken** + **bcryptjs**: Secure JWT authentication with hashed passwords
 
 ## 🏗️ Architecture
 
@@ -87,8 +112,8 @@ MSEC Connect/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/princekumar-dev/Connect-.git
-   cd Connect-
+   git clone https://github.com/princekumar-dev/Connect.git
+   cd Connect
    ```
 
 2. **Install dependencies**
@@ -125,18 +150,29 @@ MSEC Connect/
 ```
 src/
 ├── components/
-│   └── Header.jsx              # Navigation header with MSEC logo
+│   ├── Header.jsx              # Navigation header with MSEC logo
+│   ├── BottomNav.jsx           # Mobile bottom navigation
+│   ├── VenueCalendar.jsx       # Availability calendar (react-big-calendar)
+│   ├── CalendarExportModal.jsx # .ics export to Google/Outlook
+│   ├── NotificationCenter.jsx  # In-app notification feed
+│   ├── NotificationSettings.jsx# Per-user notification preferences
+│   ├── SearchBar.jsx · Skeleton.jsx · Modal.jsx · ErrorBoundary.jsx
+│   └── TopLoadingBar.jsx · GlobalExecutionLoader.jsx
 ├── pages/
 │   ├── Home.jsx               # Landing page with hero section
-│   ├── Login.jsx              # Authentication page
+│   ├── Login.jsx · SignUp.jsx  # Authentication pages
 │   ├── Venues.jsx             # Venue listings and details
+│   ├── Book.jsx · BookingStatus.jsx  # Booking flow & live status
 │   ├── Bookings.jsx           # Booking management (Admin)
 │   ├── Events.jsx             # Event listings
-│   ├── Book.jsx               # Booking form
-│   └── Contact.jsx            # Contact information
+│   ├── ManageUsers.jsx        # Admin user management
+│   ├── FAQ.jsx · Contact.jsx · PrivacyPolicy.jsx · TermsOfService.jsx
+│   └── NotFound.jsx           # 404 page
+├── hooks/useForm.js           # Form state & validation hook
+├── utils/api.js               # API client
 ├── App.jsx                    # Main application component
 ├── main.jsx                   # Application entry point
-└── index.css                  # Global styles
+└── index.css · performance.css # Global & performance styles
 
 api/
 ├── auth.js                    # Authentication routes
@@ -144,6 +180,8 @@ api/
 ├── bookings.js                # Booking system routes
 └── events.js                  # Event management routes
 
+automated-event-scheduler.js   # node-cron scheduled reminders
+generate-vapid-keys.js         # Web-push key generator
 lib/
 └── mongo.js                   # MongoDB connection configuration
 
@@ -363,5 +401,3 @@ If you prefer installing vite globally (not recommended for CI reproducibility):
 ```bash
 npm install -g vite
 ```
-
-If you want, I can add a small CI example (GitHub Actions) that installs devDependencies and runs the build.
